@@ -4239,38 +4239,45 @@ const hideLoader = () => {
 
 // ==================== INITIALIZE APP ====================
 const initApp = async () => {
-    // Initialize stores
-    Store.init();
-    
-    // Initialize modules
-    ThemeManager.init();
-    Toast.init();
-    Modal.init();
-    Router.init();
-    MobileMenu.init();
-    CartSidebar.init();
-    Search.init();
-    HeaderScroll.init();
-    BackToTop.init();
-    UserDropdown.init();
-    Newsletter.init();
-    ContactForm.init();
-    AddressForm.init();
-    
-    // Initialize auth
-    await Auth.init();
-    
-    // Load initial data
-    await DB.getSettings();
-    await DB.getCategories();
-    
-    // Update year
-    updateYear();
-    
-    // Hide loader
-    hideLoader();
-    
-    console.log('✨ تِرياق الجمال - Taryaq Beauty initialized successfully!');
+    try {
+        // Initialize stores
+        Store.init();
+        
+        // Initialize modules
+        ThemeManager.init();
+        Toast.init();
+        Modal.init();
+        Router.init();
+        MobileMenu.init();
+        CartSidebar.init();
+        Search.init();
+        HeaderScroll.init();
+        BackToTop.init();
+        UserDropdown.init();
+        Newsletter.init();
+        ContactForm.init();
+        AddressForm.init();
+        
+        // محاولة جلب البيانات من قاعدة البيانات
+        // استخدمنا try داخلية لضمان عدم توقف الموقع إذا فشل الاتصال
+        try {
+            await Auth.init();
+            await DB.getSettings();
+            await DB.getCategories();
+        } catch (dbError) {
+            console.warn('Database Error:', dbError);
+        }
+        
+        // Update year
+        updateYear();
+        
+    } catch (error) {
+        console.error('Initialization error:', error);
+    } finally {
+        // هذا السطر هو الأهم: سيقوم بإخفاء شاشة التحميل مهما كانت النتيجة
+        hideLoader();
+        console.log('✨ تِرياق الجمال - Taryaq Beauty initialized!');
+    }
 };
 
 // ==================== DOM READY ====================
