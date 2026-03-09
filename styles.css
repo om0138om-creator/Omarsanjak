@@ -6645,3 +6645,10 @@ a:focus:not(:focus-visible) {
     .d-xl-none { display: none; }
     .d-xl-block { display: block; }
 }      
+
+#page-loader {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    z-index: -9999 !important;
+}
