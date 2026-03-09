@@ -274,10 +274,12 @@ const Utils = {
             console.warn("تغيير الروابط لا يعمل على مسار file:// ولكن الموقع سيستمر بالعمل");
         }
     }
+};
 
 // ==================== TOAST NOTIFICATIONS ====================
 const Toast = {
     container: null,
+
     
     init() {
         this.container = document.getElementById('toast-container');
