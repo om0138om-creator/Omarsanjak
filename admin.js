@@ -660,17 +660,26 @@ const AdminApp = {
     
     async handleProductSubmit() {
         const productId = document.getElementById('product-id').value;
+        // جلب اسم المنتج
+        const prodName = document.getElementById('product-name').value.trim();
+        
+        // توليد الرابط المختصر (slug) إجبارياً
+        const generateSlug = prodName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\u0600-\u06FF-]/g, '') || 'prod-' + Date.now();
+
         const productData = {
-            name: document.getElementById('product-name').value.trim(),
+            name: prodName,
+            name_ar: prodName,             // حقل إجباري في الداتابيز
+            slug: generateSlug,            // حقل إجباري في الداتابيز
             description: document.getElementById('product-description').value.trim(),
+            description_ar: document.getElementById('product-description').value.trim(), // حقل إجباري في الداتابيز
             price: parseFloat(document.getElementById('product-price').value),
-            sale_price: document.getElementById('product-sale-price').value ? parseFloat(document.getElementById('product-sale-price').value) : null,
+            compare_price: document.getElementById('product-sale-price').value ? parseFloat(document.getElementById('product-sale-price').value) : null, // تم تصحيح الاسم
             category_id: document.getElementById('product-category').value || null,
             stock: parseInt(document.getElementById('product-stock').value) || 0,
             sku: document.getElementById('product-sku').value.trim() || null,
-            featured: document.getElementById('product-featured').checked,
-            active: document.getElementById('product-active').checked,
-            sale_end: document.getElementById('product-sale-end').value || null,
+            is_featured: document.getElementById('product-featured').checked, // تم تصحيح الاسم
+            is_active: document.getElementById('product-active').checked,     // تم تصحيح الاسم
+            discount_ends_at: document.getElementById('product-sale-end').value || null, // تم تصحيح الاسم
             images: AdminState.uploadedImages
         };
         
@@ -678,6 +687,7 @@ const AdminApp = {
             AdminToast.warning('يرجى ملء الحقول المطلوبة');
             return;
         }
+
         
         try {
             if (productId) {
