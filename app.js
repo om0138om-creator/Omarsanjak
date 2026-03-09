@@ -266,9 +266,14 @@ const Utils = {
                 url.searchParams.delete(key);
             }
         });
-        window.history.pushState({}, '', url);
+        
+        // أضفنا هذا الفحص لمنع توقف الجافاسكربت
+        try {
+            window.history.pushState({}, '', url);
+        } catch (error) {
+            console.warn("تغيير الروابط لا يعمل على مسار file:// ولكن الموقع سيستمر بالعمل");
+        }
     }
-};
 
 // ==================== TOAST NOTIFICATIONS ====================
 const Toast = {
