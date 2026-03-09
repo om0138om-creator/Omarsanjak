@@ -890,13 +890,20 @@ const AdminApp = {
     
     async handleCategorySubmit() {
         const categoryId = document.getElementById('category-id').value;
+        // جلب اسم التصنيف
+        const catName = document.getElementById('category-name').value.trim();
+        
+        // توليد slug تلقائي من الاسم (مطلوب في قاعدة البيانات)
+        const generateSlug = catName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\u0600-\u06FF-]/g, '') || 'cat-' + Date.now();
+
         const categoryData = {
-            name: document.getElementById('category-name').value.trim(),
-            name_ar: document.getElementById('category-name').value.trim(), // <== هذا هو السطر الناقص
+            name: catName,
+            name_ar: catName,
+            slug: generateSlug, // تمت إضافة الـ slug الإجباري
             description: document.getElementById('category-description').value.trim(),
-            icon: document.getElementById('category-icon').value.trim() || '📦',
+            image_url: document.getElementById('category-icon') ? document.getElementById('category-icon').value.trim() : null, // تم تعديل الاسم ليطابق الداتابيز
             sort_order: parseInt(document.getElementById('category-sort').value) || 0,
-            active: document.getElementById('category-active').checked
+            is_active: document.getElementById('category-active') ? document.getElementById('category-active').checked : true // تم تعديل الاسم ليطابق الداتابيز
         };
 
         
