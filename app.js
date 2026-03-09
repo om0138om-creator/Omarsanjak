@@ -91,9 +91,8 @@ const CONFIG = {
 };
 
 // ==================== SUPABASE CLIENT ====================
-var supabase = null;
 if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
-    supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+    window.supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 }
 
 // كود طوارئ لضمان اختفاء شاشة التحميل مهما كانت سرعة الإنترنت
@@ -101,6 +100,7 @@ setTimeout(() => {
     const loader = document.getElementById('page-loader');
     if (loader) loader.classList.add('hidden');
 }, 2000);
+
 // ==================== GLOBAL STATE ====================
 const Store = {
     user: null,
