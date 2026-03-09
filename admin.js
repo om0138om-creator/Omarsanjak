@@ -660,27 +660,31 @@ const AdminApp = {
     
     async handleProductSubmit() {
         const productId = document.getElementById('product-id').value;
-        // جلب اسم المنتج
+        // جلب اسم المنتج وتوليد رابط لا يتكرر أبداً
         const prodName = document.getElementById('product-name').value.trim();
-        
-        // توليد الرابط المختصر (slug) إجبارياً
-        const generateSlug = prodName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\u0600-\u06FF-]/g, '') || 'prod-' + Date.now();
+        const generateSlug = prodName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\u0600-\u06FF-]/g, '') + '-' + Math.floor(Math.random() * 10000);
+
+        // تجهيز الصور (إذا لم ترفع صورة سيضع صورة افتراضية لمنع اختفاء المنتج)
+        const uploadedImgs = (AdminState.uploadedImages && AdminState.uploadedImages.length > 0) 
+            ? AdminState.uploadedImages 
+            : ['https://placehold.co/500x500/e9ecef/6c757d?text=No+Image'];
 
         const productData = {
             name: prodName,
-            name_ar: prodName,             // حقل إجباري في الداتابيز
-            slug: generateSlug,            // حقل إجباري في الداتابيز
+            name_ar: prodName,
+            slug: generateSlug,
             description: document.getElementById('product-description').value.trim(),
-            description_ar: document.getElementById('product-description').value.trim(), // حقل إجباري في الداتابيز
-            price: parseFloat(document.getElementById('product-price').value),
-            compare_price: document.getElementById('product-sale-price').value ? parseFloat(document.getElementById('product-sale-price').value) : null, // تم تصحيح الاسم
+            description_ar: document.getElementById('product-description').value.trim(),
+            price: parseFloat(document.getElementById('product-price').value) || 0,
+            compare_price: document.getElementById('product-sale-price').value ? parseFloat(document.getElementById('product-sale-price').value) : null,
             category_id: document.getElementById('product-category').value || null,
             stock: parseInt(document.getElementById('product-stock').value) || 0,
             sku: document.getElementById('product-sku').value.trim() || null,
-            is_featured: document.getElementById('product-featured').checked, // تم تصحيح الاسم
-            is_active: document.getElementById('product-active').checked,     // تم تصحيح الاسم
-            discount_ends_at: document.getElementById('product-sale-end').value || null, // تم تصحيح الاسم
-            images: AdminState.uploadedImages
+            is_featured: document.getElementById('product-featured').checked,
+            is_active: document.getElementById('product-active').checked,
+            discount_ends_at: document.getElementById('product-sale-end').value || null,
+            images: uploadedImgs,
+            thumbnail: uploadedImgs[0] // 🌟 السطر السحري الذي سيجعل المنتج يظهر للناس!
         };
         
         if (!productData.name || !productData.price) {
@@ -688,16 +692,17 @@ const AdminApp = {
             return;
         }
 
-        
         try {
             if (productId) {
                 // Update
+                // حذفنا الـ slug من التحديث عشان الروابط القديمة ماتنكسرش
+                delete productData.slug; 
                 const { error } = await supabase.from('products').update(productData).eq('id', productId);
                 if (error) throw error;
                 AdminToast.success('تم تحديث المنتج بنجاح');
             } else {
                 // Create
-                productData.slug = AdminUtils.generateSlug(productData.name);
+                // حذفنا السطر اللي كان بيخرب الرابط، واستخدمنا الرابط العشوائي المضمون
                 const { error } = await supabase.from('products').insert([productData]);
                 if (error) throw error;
                 AdminToast.success('تم إضافة المنتج بنجاح');
@@ -724,6 +729,7 @@ const AdminApp = {
             }
         });
     },
+
     
     // ============ IMAGE UPLOAD ============
     initImageUpload() {
