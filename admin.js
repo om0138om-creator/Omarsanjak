@@ -37,10 +37,10 @@ const ADMIN_CONFIG = {
 };
 
 // ==================== SUPABASE CLIENT ====================
-let supabase = null;
-if (typeof window.supabase !== 'undefined') {
-    supabase = window.supabase.createClient(ADMIN_CONFIG.SUPABASE_URL, ADMIN_CONFIG.SUPABASE_ANON_KEY);
+if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+    window.supabase = window.supabase.createClient(ADMIN_CONFIG.SUPABASE_URL, ADMIN_CONFIG.SUPABASE_ANON_KEY);
 }
+
 
 // ==================== ADMIN STATE ====================
 const AdminState = {
