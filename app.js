@@ -91,8 +91,8 @@ const CONFIG = {
 };
 
 // ==================== SUPABASE CLIENT ====================
-let supabase = null;
-if (typeof window.supabase !== 'undefined') {
+var supabase = null;
+if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
     supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 }
 
