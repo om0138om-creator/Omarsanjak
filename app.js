@@ -154,12 +154,10 @@ const Store = {
 
 // ==================== UTILITY FUNCTIONS ====================
 const Utils = {
-    // Format price with currency
     formatPrice(price) {
         return new Intl.NumberFormat('ar-DZ').format(price) + ' ' + CONFIG.CURRENCY;
     },
     
-    // Format date
     formatDate(date) {
         return new Intl.DateTimeFormat('ar-DZ', {
             year: 'numeric',
@@ -168,7 +166,6 @@ const Utils = {
         }).format(new Date(date));
     },
     
-    // Format relative time
     formatRelativeTime(date) {
         const now = new Date();
         const diff = now - new Date(date);
@@ -183,12 +180,10 @@ const Utils = {
         return 'الآن';
     },
     
-    // Generate unique ID
     generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     },
     
-    // Generate order number
     generateOrderNumber() {
         const date = new Date();
         const year = date.getFullYear().toString().slice(-2);
@@ -197,19 +192,16 @@ const Utils = {
         return `TB${year}${month}${random}`;
     },
     
-    // Validate email
     isValidEmail(email) {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return regex.test(email);
     },
     
-    // Validate phone (Algeria)
     isValidPhone(phone) {
         const regex = /^(0)(5|6|7)[0-9]{8}$/;
         return regex.test(phone.replace(/\s/g, ''));
     },
     
-    // Debounce function
     debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
@@ -222,7 +214,6 @@ const Utils = {
         };
     },
     
-    // Throttle function
     throttle(func, limit) {
         let inThrottle;
         return function(...args) {
@@ -234,19 +225,16 @@ const Utils = {
         };
     },
     
-    // Sanitize HTML
     sanitizeHTML(str) {
         const temp = document.createElement('div');
         temp.textContent = str;
         return temp.innerHTML;
     },
     
-    // Calculate discount percentage
     calculateDiscount(originalPrice, salePrice) {
         return Math.round((1 - salePrice / originalPrice) * 100);
     },
     
-    // Get URL parameters
     getUrlParams() {
         const params = {};
         const searchParams = new URLSearchParams(window.location.search);
@@ -256,9 +244,8 @@ const Utils = {
         return params;
     },
     
-    // Set URL parameters
     setUrlParams(params) {
-        const url = new URL(window.location);
+        const url = new URL(window.location.href);
         Object.entries(params).forEach(([key, value]) => {
             if (value) {
                 url.searchParams.set(key, value);
@@ -267,7 +254,6 @@ const Utils = {
             }
         });
         
-        // أضفنا هذا الفحص لمنع توقف الجافاسكربت
         try {
             window.history.pushState({}, '', url);
         } catch (error) {
