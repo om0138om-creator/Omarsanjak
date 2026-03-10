@@ -6729,3 +6729,40 @@ a:focus:not(:focus-visible) {
         width: calc(33.333% - 15px) !important;
     }
 }
+
+
+/* ======================================================
+   إصلاح نهائي وحاسم لظهور صفحة تسجيل الدخول
+   ====================================================== */
+.page#page-auth.active {
+    display: block !important; /* العودة للوضع الطبيعي لمنع الانكماش */
+}
+
+.page-auth .auth-container {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    padding-top: 180px !important; /* مسافة كافية جداً أسفل الهيدر */
+    padding-bottom: 80px !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+}
+
+.page-auth .auth-card {
+    width: 92% !important;
+    max-width: 450px !important;
+    display: block !important;
+    background: #fff !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
+    border-radius: 16px !important;
+    padding: 30px !important;
+    margin: 0 auto !important;
+}
+
+.auth-form {
+    display: none !important;
+}
+
+.auth-form.active {
+    display: block !important;
+}
