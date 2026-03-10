@@ -3378,7 +3378,7 @@ const AuthPage = {
                 // إخفاء التبويبات القديمة
                 document.querySelector('.auth-tabs').style.display = 'none';
                 
-                // تحويل الواجهة بالكامل لصفحة تأكيد البريد
+                // تحويل الواجهة بالكامل لصفحة تأكيد البريد مع دالة تحقق فعلية
                 const authCard = document.querySelector('.auth-card');
                 authCard.innerHTML = `
                     <div class="email-verification-ui" style="text-align: center; padding: 40px 20px;">
@@ -3390,14 +3390,42 @@ const AuthPage = {
                         </p>
                         <div style="background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 25px;">
                             <p style="margin: 0; font-size: 14px; color: var(--text-light);">
-                                يرجى فتح بريدك الإلكتروني (تفقّد صندوق الوارد أو الرسائل غير المرغوب فيها Spam) والضغط على الرابط لتفعيل حسابك بنجاح.
+                                يرجى فتح بريدك الإلكتروني وتفقّد صندوق الوارد أو الرسائل غير المرغوب فيها (Spam) والضغط على الرابط لتفعيل حسابك.
                             </p>
                         </div>
-                        <button class="btn btn-primary btn-lg btn-block" onclick="window.location.reload()">
+                        <button id="verify-check-btn" class="btn btn-primary btn-lg btn-block">
                             تم التأكيد، أريد تسجيل الدخول
                         </button>
                     </div>
                 `;
+                
+                // إضافة حدث الزر للتحقق الفعلي
+                document.getElementById('verify-check-btn').addEventListener('click', async function() {
+                    const btn = this;
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<div class="spinner spinner-sm"></div> جاري التحقق...';
+                    btn.disabled = true;
+                    
+                    // محاولة تسجيل الدخول لفحص حالة التأكيد
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    
+                    if (error) {
+                        if (error.message.includes('Email not confirmed')) {
+                            Toast.error('لم يتم تأكيد البريد بعد! يرجى الذهاب للجيميل والضغط على الرابط.');
+                        } else {
+                            Toast.error(AuthPage.translateError(error.message));
+                        }
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    } else {
+                        Toast.success('تم تأكيد الحساب وتسجيل الدخول بنجاح!');
+                        window.location.reload(); 
+                    }
+                });
+
             } else {
                 // معالجة خطأ البريد المسجل مسبقاً بشكل صريح
                 if (result.error && (result.error.toLowerCase().includes('already registered') || result.error.toLowerCase().includes('already exists') || result.error.toLowerCase().includes('user already exists'))) {
@@ -4365,23 +4393,55 @@ window.AccountPage = AccountPage;
 window.Utils = Utils;
 
 // ======================================================
-// إصلاح مشكلة الشاشة البيضاء بعد العودة من رابط الإيميل
+// واجهة تأكيد البريد الإلكتروني المخصصة (من رابط الجيميل)
 // ======================================================
 window.addEventListener('DOMContentLoaded', () => {
-    // نتحقق إذا كان الرابط يحتوي على بيانات قادمة من Supabase
     const hash = window.location.hash;
     if (hash && (hash.includes('access_token') || hash.includes('type=signup') || hash.includes('type=recovery'))) {
         
-        // ننتظر نصف ثانية حتى يقوم Supabase بقراءة البيانات وتسجيل الدخول بنجاح
+        // إنشاء شاشة واجهة متخصصة فوق الموقع بالكامل
+        const confirmationUI = document.createElement('div');
+        confirmationUI.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background-color:#f8f9fa; z-index:999999; display:flex; align-items:center; justify-content:center; padding:20px; font-family:var(--font-family, "Tajawal", sans-serif);';
+        confirmationUI.innerHTML = `
+            <div style="background:#fff; padding:40px; border-radius:20px; box-shadow:0 15px 35px rgba(0,0,0,0.1); max-width:450px; width:100%; text-align:center;">
+                <div style="width:80px; height:80px; background:#d4edda; color:#28a745; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:40px; margin:0 auto 20px;">
+                    ✓
+                </div>
+                <h2 style="color:#1a1a2e; margin-bottom:15px; font-size:24px;">تم تأكيد حسابك بنجاح!</h2>
+                <p style="color:#6c757d; margin-bottom:30px; line-height:1.6; font-size:16px;">
+                    أهلاً بك في متجر ترياق الجمال. تم التحقق من بريدك الإلكتروني وتفعيل حسابك. يمكنك الآن البدء في التسوق.
+                </p>
+                <button id="enter-store-btn" style="background:var(--primary, #1a1a2e); color:#fff; border:none; padding:15px 20px; width:100%; border-radius:10px; font-size:16px; font-weight:bold; cursor:pointer; transition:all 0.3s ease;">
+                    تأكيد الدخول للموقع
+                </button>
+            </div>
+        `;
+        document.body.appendChild(confirmationUI);
+
+        // إخفاء شاشة التحميل الافتراضية للموقع
+        const loader = document.getElementById('page-loader');
+        if(loader) loader.style.display = 'none';
+
+        // تنظيف الرابط في الخلفية بدون علم المستخدم
         setTimeout(() => {
-            // ننظف الرابط ونوجه المستخدم للصفحة الرئيسية
             window.history.replaceState(null, null, window.location.pathname);
-            window.location.hash = '#home';
+        }, 1000);
+
+        // برمجة زر الدخول
+        document.getElementById('enter-store-btn').addEventListener('click', () => {
+            const btn = document.getElementById('enter-store-btn');
+            btn.innerHTML = 'جاري توجيهك للمتجر...';
+            btn.style.opacity = '0.8';
             
-            // إظهار رسالة ترحيبية
-            if (typeof Toast !== 'undefined') {
-                Toast.success('تم تأكيد حسابك وتسجيل الدخول بنجاح!');
-            }
-        }, 800);
+            setTimeout(() => {
+                confirmationUI.remove();
+                if (typeof Toast !== 'undefined') {
+                    Toast.success('تم تأكيد البريد، مرحباً بك!');
+                }
+                // إعادة تحميل الصفحة للدخول كعضو مسجل بشكل مؤكد
+                window.location.href = window.location.pathname + '#home';
+                window.location.reload();
+            }, 800);
+        });
     }
 });
