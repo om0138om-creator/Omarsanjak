@@ -6675,3 +6675,14 @@ a:focus:not(:focus-visible) {
     margin: 0 auto;
     display: block;
 }
+
+/* إصلاح مشكلة الصور العملاقة في صفحة المنتج والعرض السريع */
+.product-main-image img,
+.quick-view-image img {
+    max-width: 100% !important;
+    max-height: 400px !important;
+    object-fit: contain !important;
+    margin: 0 auto;
+    display: block;
+    border-radius: 8px;
+}
