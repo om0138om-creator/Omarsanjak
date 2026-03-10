@@ -4363,3 +4363,25 @@ window.ProductsPage = ProductsPage;
 window.ProductDetailPage = ProductDetailPage;
 window.AccountPage = AccountPage;
 window.Utils = Utils;
+
+// ======================================================
+// إصلاح مشكلة الشاشة البيضاء بعد العودة من رابط الإيميل
+// ======================================================
+window.addEventListener('DOMContentLoaded', () => {
+    // نتحقق إذا كان الرابط يحتوي على بيانات قادمة من Supabase
+    const hash = window.location.hash;
+    if (hash && (hash.includes('access_token') || hash.includes('type=signup') || hash.includes('type=recovery'))) {
+        
+        // ننتظر نصف ثانية حتى يقوم Supabase بقراءة البيانات وتسجيل الدخول بنجاح
+        setTimeout(() => {
+            // ننظف الرابط ونوجه المستخدم للصفحة الرئيسية
+            window.history.replaceState(null, null, window.location.pathname);
+            window.location.hash = '#home';
+            
+            // إظهار رسالة ترحيبية
+            if (typeof Toast !== 'undefined') {
+                Toast.success('تم تأكيد حسابك وتسجيل الدخول بنجاح!');
+            }
+        }, 800);
+    }
+});
