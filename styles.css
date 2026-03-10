@@ -6652,3 +6652,26 @@ a:focus:not(:focus-visible) {
     visibility: hidden !important;
     z-index: -9999 !important;
 }
+
+/* ======================================================
+   1. إصلاح تداخل الصفحات (إخفاء كل الصفحات وإظهار النشطة فقط)
+   ====================================================== */
+.page {
+    display: none !important;
+}
+.page.active {
+    display: block !important;
+}
+
+/* ======================================================
+   2. إصلاح مشكلة الصور العملاقة في تفاصيل المنتج
+   ====================================================== */
+.product-main-image img,
+.quick-view-image img {
+    max-width: 100% !important;
+    max-height: 450px !important; /* يمنع الصورة من أن تكون أطول من الشاشة */
+    object-fit: contain !important; /* يحافظ على دقة الصورة بدون تمطيط */
+    border-radius: 8px;
+    margin: 0 auto;
+    display: block;
+}
