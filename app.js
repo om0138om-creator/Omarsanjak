@@ -3010,9 +3010,26 @@ const CheckoutPage = {
             `;
             
             navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    document.getElementById('shipping-lat').value = position.coords.latitude;
-                    document.getElementById('shipping-lng').value = position.coords.longitude;
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    document.getElementById('shipping-lat').value = lat;
+                    document.getElementById('shipping-lng').value = lng;
+                    
+                    // --- كود جلب اسم الشارع والمدينة ---
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`);
+                        const data = await response.json();
+                        if (data && data.display_name) {
+                            // وضع العنوان النصي في مربع العنوان التفصيلي
+                            const addressInput = document.getElementById('shipping-address');
+                            if(addressInput) addressInput.value = data.display_name;
+                        }
+                    } catch (error) {
+                        console.error('خطأ في جلب العنوان:', error);
+                    }
+                    // ----------------------------------
                     
                     btn.innerHTML = `
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3022,7 +3039,7 @@ const CheckoutPage = {
                         تم تحديد الموقع
                     `;
                     btn.disabled = false;
-                    Toast.success('تم تحديد موقعك بنجاح');
+                    Toast.success('تم تحديد موقعك وجلب العنوان بنجاح');
                 },
                 (error) => {
                     btn.innerHTML = `
@@ -3039,6 +3056,7 @@ const CheckoutPage = {
             );
         });
     },
+
     
     renderOrderReview() {
         // Shipping info
