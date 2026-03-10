@@ -3387,7 +3387,12 @@ const AuthPage = {
                     </div>
                 `;
             } else {
-                Toast.error(this.translateError(result.error));
+                // معالجة خطأ البريد المسجل مسبقاً بشكل صريح
+                if (result.error && (result.error.toLowerCase().includes('already registered') || result.error.toLowerCase().includes('already exists') || result.error.toLowerCase().includes('user already exists'))) {
+                    Toast.error('هذا الحساب مسجل من قبل! يرجى الانتقال لصفحة تسجيل الدخول.');
+                } else {
+                    Toast.error(this.translateError(result.error));
+                }
             }
             
             submitBtn.disabled = false;
