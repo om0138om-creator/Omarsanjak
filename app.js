@@ -3158,9 +3158,6 @@ const CheckoutPage = {
 
 // ==================== PAYMENT (CHARGILY) ====================
 const Payment = {
-
-// ==================== PAYMENT (CHARGILY) ====================
-const Payment = {
     async initChargilyPayment(order, amount) {
         try {
             // This would normally call your backend to create a Chargily checkout
@@ -3186,6 +3183,8 @@ const Payment = {
         // Update order payment status based on Chargily callback
     }
 };
+
+    
 
 // ==================== ORDER SUCCESS PAGE ====================
 const OrderSuccessPage = {
