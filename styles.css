@@ -6686,3 +6686,46 @@ a:focus:not(:focus-visible) {
     display: block;
     border-radius: 8px;
 }
+
+
+/* ======================================================
+   1. إصلاح ظهور صفحة تسجيل الدخول (إبعادها عن الهيدر)
+   ====================================================== */
+.page#page-auth.active {
+    display: flex !important;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 150px !important; /* لدفع الصفحة للأسفل لكي لا تختبئ خلف الهيدر */
+    padding-bottom: 80px !important;
+    min-height: 80vh;
+}
+
+/* ======================================================
+   2. جعل صور المنتجات بجانب بعضها وإلغاء الصورة الطولية
+   ====================================================== */
+.custom-side-by-side {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 15px !important;
+    justify-content: center;
+    align-items: flex-start;
+    margin-bottom: 25px;
+}
+
+.custom-side-by-side .side-image {
+    width: calc(50% - 15px) !important; /* صورتين بجانب بعض في الهاتف */
+    max-width: 250px !important;
+    height: auto !important;
+    object-fit: contain !important;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    border: 1px solid #eee;
+}
+
+/* للشاشات الكبيرة: 3 صور بجانب بعض */
+@media (min-width: 768px) {
+    .custom-side-by-side .side-image {
+        width: calc(33.333% - 15px) !important;
+    }
+}
