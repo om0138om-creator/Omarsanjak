@@ -3154,6 +3154,10 @@ const CheckoutPage = {
             `;
         }
     }
+}; // 🌟 هذا هو القوس المفقود! يجب أن تضعه هنا لإغلاق CheckoutPage
+
+// ==================== PAYMENT (CHARGILY) ====================
+const Payment = {
 
 // ==================== PAYMENT (CHARGILY) ====================
 const Payment = {
