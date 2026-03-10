@@ -3363,10 +3363,29 @@ const AuthPage = {
             });
             
             if (result.success) {
-                Toast.success('تم إنشاء حسابك بنجاح! يرجى تأكيد بريدك الإلكتروني');
-                form.reset();
-                // Switch to login tab
-                document.querySelector('.auth-tab[data-tab="login"]')?.click();
+                // إخفاء التبويبات القديمة
+                document.querySelector('.auth-tabs').style.display = 'none';
+                
+                // تحويل الواجهة بالكامل لصفحة تأكيد البريد
+                const authCard = document.querySelector('.auth-card');
+                authCard.innerHTML = `
+                    <div class="email-verification-ui" style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 60px; margin-bottom: 20px; animation: bounce 2s infinite;">✉️</div>
+                        <h2 style="margin-bottom: 15px; color: var(--primary);">تأكيد البريد الإلكتروني</h2>
+                        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                            لقد قمنا بإرسال رابط التفعيل إلى البريد:<br>
+                            <strong style="color: var(--text); font-size: 18px;">${email}</strong>
+                        </p>
+                        <div style="background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 25px;">
+                            <p style="margin: 0; font-size: 14px; color: var(--text-light);">
+                                يرجى فتح بريدك الإلكتروني (تفقّد صندوق الوارد أو الرسائل غير المرغوب فيها Spam) والضغط على الرابط لتفعيل حسابك بنجاح.
+                            </p>
+                        </div>
+                        <button class="btn btn-primary btn-lg btn-block" onclick="window.location.reload()">
+                            تم التأكيد، أريد تسجيل الدخول
+                        </button>
+                    </div>
+                `;
             } else {
                 Toast.error(this.translateError(result.error));
             }
