@@ -3107,13 +3107,13 @@ const CheckoutPage = {
                 total: total,
                 shipping_name: this.shippingData.name,
                 shipping_phone: this.shippingData.phone,
-                shipping_email: this.shippingData.email,
+                shipping_email: this.shippingData.email || null,
                 shipping_wilaya: this.shippingData.wilaya,
                 shipping_commune: this.shippingData.commune,
                 shipping_address: this.shippingData.address,
-                shipping_notes: this.shippingData.notes,
-                shipping_lat: this.shippingData.lat,
-                shipping_lng: this.shippingData.lng,
+                shipping_notes: this.shippingData.notes || null,
+                shipping_lat: this.shippingData.lat || null,
+                shipping_lng: this.shippingData.lng || null,
                 items: Store.cart.map(item => ({
                     product_id: item.id,
                     name: item.name,
@@ -3126,6 +3126,7 @@ const CheckoutPage = {
             const result = await DB.createOrder(orderData);
             
             if (!result.success) {
+                // تمرير رسالة الخطأ القادمة من الداتابيز مباشرة
                 throw new Error(result.error);
             }
             
@@ -3140,7 +3141,9 @@ const CheckoutPage = {
             
         } catch (error) {
             console.error('Order error:', error);
-            Toast.error('حدث خطأ أثناء تأكيد الطلب');
+            // ✅ التعديل هنا: إظهار الخطأ الحقيقي على الشاشة
+            Toast.error('سبب الرفض: ' + error.message);
+            
             placeOrderBtn.disabled = false;
             placeOrderBtn.innerHTML = `
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3151,7 +3154,6 @@ const CheckoutPage = {
             `;
         }
     }
-};
 
 // ==================== PAYMENT (CHARGILY) ====================
 const Payment = {
