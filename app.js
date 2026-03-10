@@ -2295,19 +2295,10 @@ const ProductDetailPage = {
         const isInWishlist = Wishlist.isInWishlist(this.product.id);
         
         container.innerHTML = `
-            <div class="product-gallery">
-                <div class="product-main-image">
-                    <img src="${this.product.images?.[0] || '/placeholder.jpg'}" alt="${Utils.sanitizeHTML(this.product.name)}" id="main-product-image">
-                </div>
-                ${this.product.images?.length > 1 ? `
-                    <div class="product-thumbnails">
-                        ${this.product.images.map((img, i) => `
-                            <div class="product-thumbnail ${i === 0 ? 'active' : ''}" data-image="${img}">
-                                <img src="${img}" alt="صورة ${i + 1}">
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : ''}
+            <div class="product-gallery custom-side-by-side">
+                ${(this.product.images && this.product.images.length > 0 ? this.product.images : ['/placeholder.jpg']).map(img => `
+                    <img src="${img}" alt="${Utils.sanitizeHTML(this.product.name)}" class="side-image">
+                `).join('')}
             </div>
             
             <div class="product-details">
@@ -2440,6 +2431,8 @@ const ProductDetailPage = {
         const mainImage = document.getElementById('main-product-image');
         const thumbnails = document.querySelectorAll('.product-thumbnail');
         
+        if (!mainImage) return; // 🌟 سطر الحماية لمنع الأخطاء بعد حذف الصورة الكبيرة
+
         thumbnails.forEach(thumb => {
             thumb.addEventListener('click', () => {
                 thumbnails.forEach(t => t.classList.remove('active'));
@@ -2487,6 +2480,7 @@ const ProductDetailPage = {
             }
         });
     },
+
     
     async loadReviews() {
         const reviewsCount = document.getElementById('product-reviews-count');
