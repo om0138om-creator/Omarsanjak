@@ -4575,3 +4575,277 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// =====================================================================
+// 🌟 القائمة الجانبية الاحترافية (Premium Sidebar Menu) - إضافة تلقائية 🌟
+// =====================================================================
+window.addEventListener('DOMContentLoaded', () => {
+    // 1. إخفاء الزر القديم المزعج بجوار اللوجو (الذي أراد عمر إزالته)
+    const oldToggle = document.getElementById('mobile-menu-toggle');
+    if(oldToggle) oldToggle.style.display = 'none';
+
+    // 2. حقن أكواد التصميم (CSS) للقائمة الجديدة والفخمة
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .premium-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            z-index: 99998; opacity: 0; visibility: hidden; transition: all 0.3s ease;
+        }
+        .premium-overlay.active { opacity: 1; visibility: visible; }
+        
+        .premium-sidebar {
+            position: fixed; top: 0; right: -350px; /* تفتح بانزلاق من اليمين */
+            width: 320px; height: 100%; background: #ffffff;
+            z-index: 99999; box-shadow: -5px 0 30px rgba(0,0,0,0.15);
+            transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex; flex-direction: column; overflow-y: auto;
+        }
+        .premium-sidebar.active { right: 0; }
+        
+        .premium-sidebar-header {
+            padding: 30px 20px; background: var(--primary, #1a1a2e); color: #fff;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 4px solid var(--secondary, #d4af37);
+        }
+        .ps-user-info { display: flex; align-items: center; gap: 15px; }
+        .ps-avatar {
+            width: 55px; height: 55px; background: var(--secondary, #d4af37);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: bold; color: #fff; border: 2px solid #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .ps-user-info h4 { margin: 0; font-size: 17px; color: #fff; font-weight: bold;}
+        .ps-user-info p { margin: 5px 0 0; font-size: 13px; color: rgba(255,255,255,0.8); }
+        
+        .ps-close-btn { 
+            background: rgba(255,255,255,0.1); border: none; color: #fff; 
+            cursor: pointer; padding: 8px; border-radius: 50%; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .ps-close-btn:hover { background: rgba(255,255,255,0.3); transform: rotate(90deg); }
+        
+        .premium-sidebar-content { padding: 25px 20px; }
+        .ps-section { margin-bottom: 30px; }
+        .ps-section-title { 
+            font-size: 13px; color: #888; margin-bottom: 15px; 
+            text-transform: uppercase; letter-spacing: 1px; font-weight: bold;
+        }
+        .ps-link {
+            display: flex; align-items: center; padding: 14px 15px;
+            color: #333; text-decoration: none; border-radius: 12px;
+            transition: all 0.2s; font-weight: 600; margin-bottom: 8px;
+            background: #f8f9fa; border: 1px solid transparent;
+        }
+        .ps-link:hover { 
+            background: #fff; color: var(--primary, #1a1a2e); 
+            transform: translateX(-5px); border-color: #eee;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+        .ps-link .icon { margin-left: 15px; font-size: 20px; }
+        
+        .ps-auth-btn { 
+            width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; 
+            text-align: center; cursor: pointer; border: none; transition: 0.3s;
+            font-size: 15px; margin-top: 10px;
+        }
+        .ps-logout { background: #fee2e2; color: #dc2626; }
+        .ps-logout:hover { background: #fecaca; }
+        .ps-login { background: var(--primary, #1a1a2e); color: #fff; }
+        .ps-login:hover { background: #2a2a4a; }
+
+        /* زر الثلاث شرطات الجديد بجوار السلة */
+        .premium-menu-toggle {
+            background: none; border: none; color: var(--text, #1a1a2e); cursor: pointer;
+            padding: 5px; display: flex; align-items: center; justify-content: center;
+            transition: 0.3s; margin-right: 15px; border-radius: 8px;
+        }
+        .premium-menu-toggle:hover { color: var(--secondary, #d4af37); background: #f8f9fa; }
+    `;
+    document.head.appendChild(style);
+
+    // 3. حقن كود HTML للقائمة الجانبية في الصفحة
+    const sidebarHTML = `
+        <div id="premium-sidebar-overlay" class="premium-overlay"></div>
+        <div id="premium-sidebar" class="premium-sidebar">
+            <div class="premium-sidebar-header">
+                <div class="ps-user-info" id="ps-user-info-container">
+                    </div>
+                <button id="premium-sidebar-close" class="ps-close-btn">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="premium-sidebar-content">
+                <div class="ps-section" id="ps-account-section">
+                    <h3 class="ps-section-title">حسابي وإعداداتي</h3>
+                    <a href="#" class="ps-link" data-page="account" data-section="overview">
+                        <span class="icon">👤</span> لوحة التحكم
+                    </a>
+                    <a href="#" class="ps-link" data-page="account" data-section="orders">
+                        <span class="icon">📦</span> طلباتي
+                    </a>
+                    <a href="#" class="ps-link" data-page="account" data-section="wishlist">
+                        <span class="icon">❤️</span> المفضلة
+                    </a>
+                    <a href="#" class="ps-link" data-page="account" data-section="settings">
+                        <span class="icon">⚙️</span> إعدادات الحساب
+                    </a>
+                </div>
+
+                <div class="ps-section">
+                    <h3 class="ps-section-title">تصفح المتجر</h3>
+                    <a href="#" class="ps-link" data-page="home"><span class="icon">🏠</span> الرئيسية</a>
+                    <a href="#" class="ps-link" data-page="products"><span class="icon">🛍️</span> جميع المنتجات</a>
+                </div>
+                
+                <div class="ps-section" id="ps-auth-actions">
+                    </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', sidebarHTML);
+
+    // 4. وضع زر الثلاث شرطات الجديد بجوار السلة والمفضلة
+    const headerActions = document.querySelector('.header-actions');
+    if (headerActions) {
+        const menuBtn = document.createElement('button');
+        menuBtn.id = 'premium-menu-btn';
+        menuBtn.className = 'premium-menu-toggle';
+        menuBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        `;
+        // إضافته في أقصى اليسار بجوار باقي الأيقونات
+        headerActions.appendChild(menuBtn);
+    }
+
+    // 5. برمجة وظائف الفتح والإغلاق
+    const sidebar = document.getElementById('premium-sidebar');
+    const overlay = document.getElementById('premium-sidebar-overlay');
+    const openBtn = document.getElementById('premium-menu-btn');
+    const closeBtn = document.getElementById('premium-sidebar-close');
+
+    const openSidebar = () => {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+        document.body.classList.add('no-scroll');
+        updateSidebarUser();
+    };
+
+    const closeSidebar = () => {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+        document.body.classList.remove('no-scroll');
+    };
+
+    openBtn?.addEventListener('click', openSidebar);
+    closeBtn?.addEventListener('click', closeSidebar);
+    overlay?.addEventListener('click', closeSidebar);
+
+    // إغلاق القائمة أوتوماتيكياً عند الضغط على أي رابط بداخلها
+    document.querySelectorAll('.ps-link').forEach(link => {
+        link.addEventListener('click', () => {
+            closeSidebar();
+        });
+    });
+
+    // تحديث بيانات المستخدم في القائمة لتعرف إن كان مسجل دخول أم لا
+    window.updateSidebarUser = () => {
+        const userInfo = document.getElementById('ps-user-info-container');
+        const authActions = document.getElementById('ps-auth-actions');
+        const accountSection = document.getElementById('ps-account-section');
+        
+        if (!userInfo || !authActions) return;
+
+        if (Store.user) {
+            const userData = Store.user.user_metadata || {};
+            const name = userData.full_name || userData.first_name || Store.user.email.split('@')[0];
+            const initial = name.charAt(0).toUpperCase();
+
+            userInfo.innerHTML = `
+                <div class="ps-avatar">${initial}</div>
+                <div>
+                    <h4>${Utils.sanitizeHTML(name)}</h4>
+                    <p>${Utils.sanitizeHTML(Store.user.email)}</p>
+                </div>
+            `;
+            authActions.innerHTML = `
+                <button class="ps-auth-btn ps-logout" onclick="Auth.logout(); document.getElementById('premium-sidebar-close').click();">
+                    تسجيل الخروج
+                </button>
+            `;
+            if(accountSection) accountSection.style.display = 'block';
+        } else {
+            userInfo.innerHTML = `
+                <div class="ps-avatar">؟</div>
+                <div>
+                    <h4>زائر</h4>
+                    <p>يرجى تسجيل الدخول للوصول لحسابك</p>
+                </div>
+            `;
+            authActions.innerHTML = `
+                <button class="ps-auth-btn ps-login" onclick="Router.navigate('auth'); document.getElementById('premium-sidebar-close').click();">
+                    تسجيل الدخول / إنشاء حساب
+                </button>
+            `;
+            // إخفاء قسم الإعدادات للزائر لأنه لا يملك حساب بعد
+            if(accountSection) accountSection.style.display = 'none';
+        }
+    };
+
+    // تشغيل التحديث فوراً
+    setTimeout(updateSidebarUser, 500);
+});
+
+// =====================================================================
+// 🛠️ إصلاحات التخطيط والروابط (Layout & Routing Fixes) 
+// =====================================================================
+
+window.addEventListener('DOMContentLoaded', () => {
+    // 1. إصلاح قسم "عروض حصرية" ليصبح شبكة منتظمة مثل "منتجات مميزة"
+    const fixStyles = document.createElement('style');
+    fixStyles.innerHTML = `
+        #flash-sale-products {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 15px !important;
+        }
+        @media (min-width: 768px) {
+            #flash-sale-products {
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 20px !important;
+            }
+        }
+        @media (min-width: 1024px) {
+            #flash-sale-products {
+                grid-template-columns: repeat(4, 1fr) !important;
+            }
+        }
+        #flash-sale-products .product-card {
+            width: 100% !important;
+            margin: 0 !important;
+        }
+    `;
+    document.head.appendChild(fixStyles);
+});
+
+// 2. إصلاح مشكلة بقاء صفحة "تم تسجيل طلبك بنجاح" عند إعادة فتح المتصفح
+const originalOrderSuccessInit = OrderSuccessPage.init;
+OrderSuccessPage.init = async function(orderId) {
+    // تشغيل الكود الأصلي لعرض الفاتورة
+    await originalOrderSuccessInit.call(this, orderId);
+    
+    // تنظيف الرابط في الأعلى بعد ثانية من ظهور الفاتورة
+    // لكي يعود العميل للصفحة الرئيسية إذا أغلق المتصفح أو قام بتحديثه
+    setTimeout(() => {
+        try {
+            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({path: cleanUrl}, '', cleanUrl);
+        } catch(e) {
+            console.warn("تعذر تنظيف الرابط", e);
+        }
+    }, 1000);
+};
