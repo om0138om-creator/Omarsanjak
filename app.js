@@ -3174,46 +3174,32 @@ const Payment = {
         try {
             Toast.info('جاري تجهيز بوابة الدفع الآمنة، يرجى الانتظار...');
             
-            // وضعنا المفتاح التجريبي هنا مباشرة لضمان نجاح العملية 100%
-            const secretKey = 'test_sk_uxlST0ncqBSZ2qifPpn0ufXPEu49xdj84Wp5yaHo';
-            
-            // الروابط التي سيعود إليها العميل بعد الدفع
-            const successUrl = `${window.location.origin}/?page=order-success&orderId=${order.id}`;
-            const backUrl = `${window.location.origin}/?page=checkout`;
-
-            // حيلة برمجية (Proxy) لإرسال الطلب مباشرة من المتصفح
-            const targetUrl = 'https://pay.chargily.net/api/v2/checkouts';
-            const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
-
-            const response = await fetch(proxyUrl, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${secretKey}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
+            // الاتصال المباشر بالسيرفر الآمن (Edge Function) الذي أنشأناه للتو
+            const { data, error } = await supabase.functions.invoke('create-checkout', {
+                body: { 
                     amount: amount,
-                    currency: 'dzd',
-                    success_url: successUrl,
-                    failure_url: backUrl,
-                })
+                    success_url: `${window.location.origin}/?page=order-success&orderId=${order.id}`,
+                    back_url: `${window.location.origin}/?page=checkout`
+                }
             });
 
-            const data = await response.json();
-
-            // إذا نجحنا في جلب رابط الدفع، نحول العميل إليه فوراً (هنا الدفع الحقيقي!)
+            if (error) {
+                console.error("Invoke Error:", error);
+                throw new Error('فشل الاتصال بخوادم الدفع الآمنة');
+            }
+            
+            // تحويل العميل لصفحة الدفع
             if (data && data.checkout_url) {
                 window.location.href = data.checkout_url;
             } else {
-                console.error("Chargily Error:", data);
-                throw new Error('لم نتمكن من جلب رابط الدفع');
+                console.error("Chargily Error Data:", data);
+                throw new Error(data.error || 'لم يتم استلام رابط الدفع من البوابة');
             }
             
         } catch (error) {
             console.error('Payment error:', error);
-            Toast.error('عذراً، حدث خطأ في تجهيز بوابة الدفع. يرجى المحاولة لاحقاً.');
+            Toast.error('عذراً، حدث خطأ: ' + error.message);
             
-            // إعادة تفعيل زر تأكيد الطلب
             const placeOrderBtn = document.getElementById('place-order');
             if(placeOrderBtn) {
                 placeOrderBtn.disabled = false;
