@@ -5083,3 +5083,250 @@ window.addEventListener('DOMContentLoaded', () => {
     };
 });
 
+// =====================================================================
+// 🌟 التحديث الشامل: الاحتفاظ بالصفحة، الصور، وزر الشراء المباشر 🌟
+// =====================================================================
+
+// 1. إصلاح مشكلة الرجوع للرئيسية ورسالة الدخول المزعجة
+Auth.init = async function() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+        Store.user = session.user;
+        this.updateUI();
+    }
+
+    supabase.auth.onAuthStateChange((event, session) => {
+        Store.user = session?.user || null;
+        this.updateUI();
+
+        if (event === 'SIGNED_IN') {
+            // التحقق من أن الرسالة لم تظهر مسبقاً في هذه الجلسة
+            if (!sessionStorage.getItem('taryaq_welcome_shown')) {
+                Toast.success('أهلاً بك مرة أخرى في ترياق الجمال');
+                sessionStorage.setItem('taryaq_welcome_shown', 'true');
+                // لا نعود للرئيسية إلا إذا كان العميل في صفحة تسجيل الدخول
+                if (Router.currentPage === 'auth') {
+                    Router.navigate('home');
+                }
+            }
+        } else if (event === 'SIGNED_OUT') {
+            sessionStorage.removeItem('taryaq_welcome_shown');
+        }
+    });
+};
+
+// 2. حفظ آخر صفحة كان فيها العميل للرجوع إليها عند فتح الموقع
+const originalRouterNavigate = Router.navigate;
+Router.navigate = function(page, options = {}, pushState = true) {
+    originalRouterNavigate.call(this, page, options, pushState);
+    localStorage.setItem('taryaq_last_page', page);
+    localStorage.setItem('taryaq_last_options', JSON.stringify(options));
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+    // الانتظار قليلاً حتى يتم تحميل الموقع ثم توجيه العميل لآخر صفحة كان فيها
+    setTimeout(() => {
+        const params = Utils.getUrlParams();
+        const lastPage = localStorage.getItem('taryaq_last_page');
+        if (!params.page && lastPage && lastPage !== 'auth') {
+            const lastOptions = JSON.parse(localStorage.getItem('taryaq_last_options') || '{}');
+            Router.navigate(lastPage, lastOptions, false);
+        }
+    }, 800);
+    
+    // 3. إخفاء البانر والمميزات بناءً على طلبك
+    // (يمكنك مسح هذا الجزء من الكود مستقبلاً إذا أردت إرجاعها)
+    const hideStyles = document.createElement('style');
+    hideStyles.innerHTML = `
+        .hero, #hero-slider, .features-section, .store-features { 
+            display: none !important; 
+        }
+    `;
+    document.head.appendChild(hideStyles);
+});
+
+// 4. جعل الصورة قابلة للنقر + إضافة زر "اشتر الآن" لجميع المنتجات
+HomePage.createProductCard = function(product) {
+    const hasDiscount = product.sale_price && product.sale_price < product.price;
+    const discountPercentage = hasDiscount ? Utils.calculateDiscount(product.price, product.sale_price) : 0;
+    const isOutOfStock = product.stock <= 0;
+    const isLowStock = product.stock > 0 && product.stock <= 5;
+    const isInWishlist = Wishlist.isInWishlist(product.id);
+    
+    return `
+        <div class="product-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="product-image" onclick="Router.navigate('product-detail', {id: '${product.id}'})" style="cursor: pointer;">
+                <img src="${product.images?.[0] || '/placeholder.jpg'}" alt="${Utils.sanitizeHTML(product.name)}" loading="lazy">
+                
+                <div class="product-badges">
+                    ${hasDiscount ? `<span class="product-badge badge-sale">-${discountPercentage}%</span>` : ''}
+                    ${product.is_new ? '<span class="product-badge badge-new">جديد</span>' : ''}
+                    ${isOutOfStock ? '<span class="product-badge badge-outofstock">نفذ المخزون</span>' : ''}
+                </div>
+                
+                <div class="product-actions" onclick="event.stopPropagation();">
+                    <button class="product-action-btn ${isInWishlist ? 'active' : ''}" 
+                            data-wishlist-id="${product.id}"
+                            onclick="Wishlist.toggle(${JSON.stringify(product).replace(/"/g, '&quot;')})">
+                        <svg viewBox="0 0 24 24" fill="${isInWishlist ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="product-info" style="display: flex; flex-direction: column; flex-grow: 1;">
+                <span class="product-category">${product.category?.name || ''}</span>
+                <h3 class="product-name" style="margin-bottom: auto;">
+                    <a href="#" data-page="product-detail" data-id="${product.id}">${Utils.sanitizeHTML(product.name)}</a>
+                </h3>
+                
+                <div class="product-price" style="margin-top: 10px;">
+                    <span class="current-price">${Utils.formatPrice(product.sale_price || product.price)}</span>
+                    ${hasDiscount ? `<span class="original-price">${Utils.formatPrice(product.price)}</span>` : ''}
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 15px;">
+                    <button class="product-add-btn" 
+                            ${isOutOfStock ? 'disabled' : ''}
+                            onclick="Cart.add(${JSON.stringify(product).replace(/"/g, '&quot;')})"
+                            style="width: 100%; border-radius: 8px; padding: 10px; display: flex; justify-content: center; align-items: center; gap: 5px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px; height:18px;">
+                            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+                        </svg>
+                        ${isOutOfStock ? 'نفذ المخزون' : 'أضف للسلة'}
+                    </button>
+                    
+                    <button class="btn btn-secondary" 
+                            ${isOutOfStock ? 'disabled' : ''}
+                            onclick="Cart.add(${JSON.stringify(product).replace(/"/g, '&quot;')}); Router.navigate('checkout');"
+                            style="width: 100%; border-radius: 8px; padding: 10px; background: #ffa41c; color: #111; border: 1px solid #ff8f00; font-weight: bold; cursor: ${isOutOfStock ? 'not-allowed' : 'pointer'}; opacity: ${isOutOfStock ? '0.5' : '1'};">
+                        ⚡ اشترِ الآن
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+};
+
+// =====================================================================
+// 🌟 إزالة القديم بالقوة + إضافة بانر أمازون الديناميكي (بتحكم الأدمن) 🌟
+// =====================================================================
+
+window.addEventListener('DOMContentLoaded', () => {
+    // 1. إخفاء الأقسام القديمة تماماً (Hero & Features)
+    const hideStyles = document.createElement('style');
+    hideStyles.innerHTML = `
+        .hero, #hero-slider, .features-section, .store-features { 
+            display: none !important; 
+        }
+        .amazon-banner-container {
+            width: 100%;
+            position: relative;
+            background: #f5f6f8;
+            margin-bottom: 20px;
+        }
+        .amazon-banner-img {
+            width: 100%;
+            max-height: 450px;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+        }
+        .admin-banner-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(26, 26, 46, 0.9);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 100;
+            border: 2px solid #d4af37;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: 0.3s;
+        }
+        .admin-banner-btn:hover {
+            background: #d4af37;
+            color: #1a1a2e;
+        }
+    `;
+    document.head.appendChild(hideStyles);
+});
+
+// 2. دمج البانر الجديد مع تحميل الصفحة الرئيسية
+const originalHomePageInitBanner = HomePage.init;
+HomePage.init = async function() {
+    await originalHomePageInitBanner.apply(this);
+    setTimeout(renderAmazonBanner, 300); // ننتظر قليلاً لضمان تحميل الصفحة
+};
+
+async function renderAmazonBanner() {
+    // منع تكرار البانر
+    if(document.getElementById('amazon-dynamic-banner')) return;
+
+    const mainEl = document.querySelector('main') || document.getElementById('home-page');
+    if (!mainEl) return;
+    
+    const bannerContainer = document.createElement('div');
+    bannerContainer.id = 'amazon-dynamic-banner';
+    bannerContainer.className = 'amazon-banner-container';
+    
+    // إدخاله في أعلى الصفحة الرئيسية
+    if (mainEl.firstChild) {
+        mainEl.insertBefore(bannerContainer, mainEl.firstChild);
+    } else {
+        mainEl.appendChild(bannerContainer);
+    }
+
+    // جلب رابط البانر من قاعدة البيانات
+    let bannerUrl = null;
+    try {
+        const { data, error } = await supabase.from('settings').select('banner_url').limit(1).single();
+        if (!error && data) bannerUrl = data.banner_url;
+    } catch(e) { 
+        console.warn("عمود banner_url غير موجود بعد في قاعدة البيانات."); 
+    }
+
+    const isAdmin = Auth.isAdmin(); // التحقق هل المستخدم الحالي هو مدير الموقع
+
+    // عرض الصورة أو إخفاؤها
+    if (bannerUrl && bannerUrl.trim() !== '') {
+        bannerContainer.innerHTML = `<img src="${bannerUrl}" class="amazon-banner-img" alt="عروض المتجر حصرياً">`;
+        bannerContainer.style.display = 'block';
+    } else {
+        bannerContainer.style.display = isAdmin ? 'block' : 'none';
+        if(isAdmin) {
+            bannerContainer.innerHTML = `<div style="height: 200px; display:flex; align-items:center; justify-content:center; border: 3px dashed #d4af37; color: #1a1a2e; font-weight:bold; font-size:18px; background:#fff8e7;">لم يتم إضافة بانر. اضغط على زر الإعدادات لإضافة بانر احترافي كأمازون.</div>`;
+        }
+    }
+
+    // إضافة زر التحكم السري (للأدمن فقط)
+    if (isAdmin) {
+        const adminBtn = document.createElement('button');
+        adminBtn.className = 'admin-banner-btn';
+        adminBtn.innerHTML = '⚙️ إعدادات البانر العريض';
+        adminBtn.onclick = async () => {
+            const newUrl = prompt('ضع رابط الصورة الجديد هنا (اتركه فارغاً لحذف البانر تماماً):', bannerUrl || '');
+            if (newUrl !== null) { // إذا لم يضغط إلغاء
+                try {
+                    // جلب ID الإعدادات لتحديثها
+                    const { data: settingsData } = await supabase.from('settings').select('id').limit(1);
+                    if (settingsData && settingsData.length > 0) {
+                        await supabase.from('settings').update({ banner_url: newUrl }).eq('id', settingsData[0].id);
+                        Toast.success('تم تحديث البانر بنجاح! سيتم إعادة تحميل الصفحة...');
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        Toast.error('لم يتم العثور على جدول الإعدادات.');
+                    }
+                } catch(e) {
+                    Toast.error('حدث خطأ. تأكد من عمل الخطوة الأولى في Supabase.');
+                }
+            }
+        };
+        bannerContainer.appendChild(adminBtn);
+    }
+}
