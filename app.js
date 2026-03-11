@@ -4984,3 +4984,102 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     };
 });
+
+// =====================================================================
+// 🌟 تصميم صفحة "المراجعة النهائية والدفع" الاحترافي (On-Site Checkout UI) 🌟
+// =====================================================================
+
+window.addEventListener('DOMContentLoaded', () => {
+    // تطوير دالة عرض مراجعة الطلب (Step 3) لتصبح بتصميم Split View
+    CheckoutPage.renderOrderReview = function() {
+        const shippingReview = document.getElementById('review-shipping');
+        const paymentReview = document.getElementById('review-payment');
+        const productsReview = document.getElementById('review-products');
+        
+        if (!shippingReview || !productsReview) return;
+
+        // 1. إعادة تصميم الحاوية الكبيرة لتصبح عمودين (مثل المواقع العالمية)
+        const step3Content = document.querySelector('.checkout-step-content:nth-child(3)');
+        if(step3Content) {
+            step3Content.style.display = 'grid';
+            step3Content.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))';
+            step3Content.style.gap = '30px';
+            step3Content.style.alignItems = 'start';
+        }
+
+        // 2. تصميم قسم بيانات العميل (الجانب الأيمن)
+        shippingReview.parentElement.style.background = '#fff';
+        shippingReview.parentElement.style.padding = '25px';
+        shippingReview.parentElement.style.borderRadius = '12px';
+        shippingReview.parentElement.style.border = '1px solid #eee';
+
+        shippingReview.innerHTML = `
+            <div style="margin-bottom: 20px; border-bottom: 1px solid #f5f5f5; padding-bottom: 15px;">
+                <h4 style="color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 20px;">👤</span> بيانات المشتري
+                </h4>
+                <p style="margin: 5px 0;"><strong>الاسم:</strong> ${Utils.sanitizeHTML(this.shippingData.name)}</p>
+                <p style="margin: 5px 0;"><strong>الهاتف:</strong> ${this.shippingData.phone}</p>
+                <p style="margin: 5px 0;"><strong>البريد:</strong> ${this.shippingData.email}</p>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 20px;">📍</span> عنوان التوصيل
+                </h4>
+                <p style="margin: 5px 0;"><strong>الولاية:</strong> ${this.shippingData.wilaya_name}</p>
+                <p style="margin: 5px 0;"><strong>البلدية:</strong> ${this.shippingData.commune}</p>
+                <p style="margin: 5px 0;"><strong>العنوان بالتفصيل:</strong> ${Utils.sanitizeHTML(this.shippingData.address)}</p>
+            </div>
+        `;
+
+        // 3. تصميم ملخص الطلب (الجانب الأيسر - الكارت المالي)
+        productsReview.parentElement.style.background = '#f9fafb';
+        productsReview.parentElement.style.padding = '25px';
+        productsReview.parentElement.style.borderRadius = '12px';
+        productsReview.parentElement.style.border = '1px solid #e5e7eb';
+        productsReview.parentElement.querySelector('h3').style.borderBottom = '1px solid #ddd';
+        productsReview.parentElement.querySelector('h3').style.paddingBottom = '15px';
+
+        productsReview.innerHTML = `
+            <div style="max-height: 300px; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;">
+                ${Store.cart.map(item => `
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #eee;">
+                        <img src="${item.image || '/placeholder.jpg'}" style="width: 50px; height: 50px; border-radius: 6px; object-fit: cover;">
+                        <div style="flex: 1;">
+                            <h5 style="margin: 0; font-size: 14px; color: #333;">${Utils.sanitizeHTML(item.name)}</h5>
+                            <small style="color: #666;">الكمية: ${item.quantity}</small>
+                        </div>
+                        <span style="font-weight: bold; color: var(--primary);">${Utils.formatPrice(item.price * item.quantity)}</span>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div style="border-top: 2px dashed #ddd; pt: 15px; margin-top: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>المجموع الفرعي:</span>
+                    <span>${document.getElementById('checkout-subtotal').textContent}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>تكلفة الشحن:</span>
+                    <span style="color: #059669; font-weight: bold;">${document.getElementById('checkout-shipping').textContent}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                    <strong style="font-size: 18px;">الإجمالي النهائي:</strong>
+                    <strong style="font-size: 22px; color: var(--primary);">${document.getElementById('checkout-total').textContent}</strong>
+                </div>
+            </div>
+        `;
+        
+        // تحديث طريقة الدفع المختارة بشكل شيك
+        if (paymentReview) {
+            const method = this.paymentMethod === 'card' ? 'البطاقة الذهبية / CIB 💳' : 'الدفع عند الاستلام 💵';
+            paymentReview.innerHTML = `
+                <div style="padding: 12px; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; color: #92400e; font-weight: bold; display: flex; align-items: center; gap: 10px;">
+                    <span>طريقة الدفع المختارة:</span>
+                    <span>${method}</span>
+                </div>
+            `;
+        }
+    };
+});
+
