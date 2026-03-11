@@ -3172,27 +3172,57 @@ const CheckoutPage = {
 const Payment = {
     async initChargilyPayment(order, amount) {
         try {
-            // This would normally call your backend to create a Chargily checkout
-            // Since we're using client-side only, we'll simulate
+            Toast.info('جاري إعداد صفحة الدفع الآمنة، يرجى الانتظار...');
             
-            Toast.info('جاري تحويلك لصفحة الدفع...');
+            // هنا نقوم بالاتصال بالسيرفر الآمن الخاص بك (Edge Function) في Supabase
+            // لكي يقوم هو بالتواصل مع Chargily وإخفاء مفتاحك السري
+            const { data, error } = await supabase.functions.invoke('create-checkout', {
+                body: { 
+                    order_id: order.id,
+                    order_number: order.order_number,
+                    amount: amount,
+                    customer_name: order.shipping_name,
+                    customer_email: order.shipping_email || 'customer@taryaq.com',
+                    // الرابط الذي سيعود إليه العميل بعد نجاح الدفع
+                    success_url: `${window.location.origin}/?page=order-success&orderId=${order.id}`,
+                    // الرابط الذي سيعود إليه العميل إذا تراجع عن الدفع
+                    back_url: `${window.location.origin}/?page=checkout`
+                }
+            });
+
+            if (error) {
+                console.error('Supabase Function Error:', error);
+                throw new Error('فشل الاتصال بخدمة الدفع');
+            }
             
-            // In production, you would call Chargily API from your backend
-            // For now, we'll just show success
-            setTimeout(() => {
-                Cart.clear();
-                Router.navigate('order-success', { orderId: order.id });
-            }, 2000);
+            // إذا استلمنا رابط الدفع الحقيقي من Chargily، نحول العميل إليه فوراً
+            if (data && data.checkout_url) {
+                window.location.href = data.checkout_url;
+            } else {
+                throw new Error('لم يتم العثور على رابط الدفع');
+            }
             
         } catch (error) {
             console.error('Payment error:', error);
-            Toast.error('حدث خطأ في عملية الدفع');
+            Toast.error('عذراً، حدث خطأ في تجهيز بوابة الدفع. يرجى المحاولة لاحقاً.');
+            
+            // إعادة تفعيل زر تأكيد الطلب في حالة الفشل
+            const placeOrderBtn = document.getElementById('place-order');
+            if(placeOrderBtn) {
+                placeOrderBtn.disabled = false;
+                placeOrderBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    تأكيد الطلب
+                `;
+            }
         }
     },
     
-    // Webhook handler would be on the backend
     async handlePaymentCallback(checkoutId, status) {
-        // Update order payment status based on Chargily callback
+        // سيتم معالجة حالة الدفع الحقيقية من خلال السيرفر (Webhook)
     }
 };
 
