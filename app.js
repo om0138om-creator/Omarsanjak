@@ -3174,12 +3174,15 @@ const Payment = {
         try {
             Toast.info('جاري تجهيز بوابة الدفع الآمنة، يرجى الانتظار...');
             
-            // الاتصال المباشر بالسيرفر الآمن (Edge Function) الذي أنشأناه للتو
-            const { data, error } = await supabase.functions.invoke('create-checkout', {
+            // 🌟 الحل السحري هنا: جلب الرابط الكامل للموقع بما فيه اسم المجلد
+            const baseUrl = window.location.href.split('?')[0];
+            
+            // الاتصال المباشر بالسيرفر الآمن (Edge Function)
+            const { data, error } = await supabase.functions.invoke('process-payment', {
                 body: { 
                     amount: amount,
-                    success_url: `${window.location.origin}/?page=order-success&orderId=${order.id}`,
-                    back_url: `${window.location.origin}/?page=checkout`
+                    success_url: `${baseUrl}?page=order-success&orderId=${order.id}`,
+                    back_url: `${baseUrl}?page=checkout`
                 }
             });
 
