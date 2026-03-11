@@ -16,7 +16,7 @@ const CONFIG = {
     
     // Chargily Pay Configuration
     CHARGILY_API_URL: 'https://pay.chargily.net/api/v2',
-    CHARGILY_PUBLIC_KEY: '', // سيتم إضافته من لوحة التحكم
+    CHARGILY_PUBLIC_KEY: 'test_pk_WzDrci0tIHnCNSY5IKxbEjxeSAeC0AelLkYP0LIn',
     
     // App Settings
     CURRENCY: 'دج',
@@ -3172,41 +3172,53 @@ const CheckoutPage = {
 const Payment = {
     async initChargilyPayment(order, amount) {
         try {
-            Toast.info('جاري إعداد صفحة الدفع الآمنة، يرجى الانتظار...');
+            Toast.info('جاري تجهيز بوابة الدفع الآمنة، يرجى الانتظار...');
             
-            // هنا نقوم بالاتصال بالسيرفر الآمن الخاص بك (Edge Function) في Supabase
-            // لكي يقوم هو بالتواصل مع Chargily وإخفاء مفتاحك السري
-            const { data, error } = await supabase.functions.invoke('create-checkout', {
-                body: { 
-                    order_id: order.id,
-                    order_number: order.order_number,
+            // 🌟 جلب المفتاح السري التجريبي من إعدادات لوحة التحكم 🌟
+            const secretKey = Store.settings.chargily_key;
+            
+            if (!secretKey) {
+                Toast.error('خطأ: لم يتم إضافة مفتاح الدفع في لوحة التحكم بعد!');
+                throw new Error('Missing Secret Key');
+            }
+
+            // الروابط التي سيعود إليها العميل بعد الدفع
+            const successUrl = `${window.location.origin}/?page=order-success&orderId=${order.id}`;
+            const backUrl = `${window.location.origin}/?page=checkout`;
+
+            // حيلة برمجية (Proxy) لإرسال الطلب مباشرة من المتصفح بدون سيرفر
+            const targetUrl = 'https://pay.chargily.net/api/v2/checkouts';
+            const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+
+            const response = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${secretKey}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
                     amount: amount,
-                    customer_name: order.shipping_name,
-                    customer_email: order.shipping_email || 'customer@taryaq.com',
-                    // الرابط الذي سيعود إليه العميل بعد نجاح الدفع
-                    success_url: `${window.location.origin}/?page=order-success&orderId=${order.id}`,
-                    // الرابط الذي سيعود إليه العميل إذا تراجع عن الدفع
-                    back_url: `${window.location.origin}/?page=checkout`
-                }
+                    currency: 'dzd',
+                    success_url: successUrl,
+                    failure_url: backUrl,
+                })
             });
 
-            if (error) {
-                console.error('Supabase Function Error:', error);
-                throw new Error('فشل الاتصال بخدمة الدفع');
-            }
-            
-            // إذا استلمنا رابط الدفع الحقيقي من Chargily، نحول العميل إليه فوراً
+            const data = await response.json();
+
+            // إذا نجحنا في جلب رابط الدفع، نحول العميل إليه
             if (data && data.checkout_url) {
                 window.location.href = data.checkout_url;
             } else {
-                throw new Error('لم يتم العثور على رابط الدفع');
+                console.error("Chargily Error:", data);
+                throw new Error('لم نتمكن من جلب رابط الدفع');
             }
             
         } catch (error) {
             console.error('Payment error:', error);
             Toast.error('عذراً، حدث خطأ في تجهيز بوابة الدفع. يرجى المحاولة لاحقاً.');
             
-            // إعادة تفعيل زر تأكيد الطلب في حالة الفشل
+            // إعادة تفعيل زر تأكيد الطلب
             const placeOrderBtn = document.getElementById('place-order');
             if(placeOrderBtn) {
                 placeOrderBtn.disabled = false;
@@ -3222,9 +3234,11 @@ const Payment = {
     },
     
     async handlePaymentCallback(checkoutId, status) {
-        // سيتم معالجة حالة الدفع الحقيقية من خلال السيرفر (Webhook)
+        // ...
     }
 };
+
+    
 
     
 
