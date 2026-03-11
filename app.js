@@ -3713,39 +3713,141 @@ const AccountPage = {
             `;
             return;
         }
+
+        // تقسيم الطلبات لتنظيم الشاشة
+        const activeOrders = orders.filter(o => ['pending', 'processing', 'shipped'].includes(o.status));
+        const pastOrders = orders.filter(o => o.status === 'delivered');
+        const cancelledOrders = orders.filter(o => o.status === 'cancelled');
+
+        // التبويبات العلوية (Tabs)
+        let html = `
+            <div class="orders-tabs" style="display: flex; gap: 15px; margin-bottom: 25px; border-bottom: 2px solid var(--border-color); padding-bottom: 0;">
+                <button class="tab-btn active" onclick="AccountPage.showOrderTab('active', this)" style="background:none; border:none; padding:12px 20px; font-weight:bold; cursor:pointer; color:var(--primary); border-bottom:3px solid var(--primary); margin-bottom:-2px; font-size:16px; transition:all 0.3s;">طلبات حالية (${activeOrders.length})</button>
+                <button class="tab-btn" onclick="AccountPage.showOrderTab('past', this)" style="background:none; border:none; padding:12px 20px; font-weight:bold; cursor:pointer; color:var(--text-light); border-bottom:3px solid transparent; margin-bottom:-2px; font-size:16px; transition:all 0.3s;">مكتملة (${pastOrders.length})</button>
+                <button class="tab-btn" onclick="AccountPage.showOrderTab('cancelled', this)" style="background:none; border:none; padding:12px 20px; font-weight:bold; cursor:pointer; color:var(--text-light); border-bottom:3px solid transparent; margin-bottom:-2px; font-size:16px; transition:all 0.3s;">ملغاة (${cancelledOrders.length})</button>
+            </div>
+            
+            <div id="tab-active" class="order-tab-content">
+                ${this.generateOrdersHTML(activeOrders)}
+            </div>
+            <div id="tab-past" class="order-tab-content" style="display:none;">
+                ${this.generateOrdersHTML(pastOrders)}
+            </div>
+            <div id="tab-cancelled" class="order-tab-content" style="display:none;">
+                ${this.generateOrdersHTML(cancelledOrders)}
+            </div>
+        `;
+
+        container.innerHTML = html;
+    },
+
+    // دالة مساعدة لتشغيل التبويبات
+    showOrderTab(tabName, btnElement) {
+        document.querySelectorAll('.order-tab-content').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(el => {
+            el.style.color = 'var(--text-light)';
+            el.style.borderBottomColor = 'transparent';
+        });
         
-        container.innerHTML = orders.map(order => `
-            <div class="order-card">
-                <div class="order-card-header">
+        document.getElementById('tab-' + tabName).style.display = 'block';
+        btnElement.style.color = 'var(--primary)';
+        btnElement.style.borderBottomColor = 'var(--primary)';
+    },
+
+    // دالة التصميم الاحترافي للشريط والصور
+    generateOrdersHTML(ordersArray) {
+        if(ordersArray.length === 0) return `
+            <div style="text-align:center; padding:40px 20px; background:#f8f9fa; border-radius:12px; color:var(--text-light);">
+                <p style="font-size:16px; margin:0;">لا توجد طلبات في هذا القسم.</p>
+            </div>
+        `;
+        
+        return ordersArray.map(order => {
+            // حساب التقدم في شريط الحالة
+            let progress = 0;
+            let activeStep = 0;
+            if(order.status === 'pending') { progress = 25; activeStep = 1; }
+            if(order.status === 'processing') { progress = 50; activeStep = 2; }
+            if(order.status === 'shipped') { progress = 75; activeStep = 3; }
+            if(order.status === 'delivered') { progress = 100; activeStep = 4; }
+
+            const steps = [
+                { label: 'تم الطلب' },
+                { label: 'قيد التجهيز' },
+                { label: 'في الطريق' },
+                { label: 'تم التسليم' }
+            ];
+
+            return `
+            <div class="order-card" style="border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; margin-bottom: 25px; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: transform 0.2s;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 25px;">
                     <div>
-                        <span class="order-number">#${order.order_number}</span>
-                        <span class="order-date">${Utils.formatDate(order.created_at)}</span>
+                        <div style="font-size: 13px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px;">رقم الطلب</div>
+                        <strong style="font-size: 18px; color: #1a1a2e;">#${order.order_number}</strong>
+                        <div style="font-size: 13px; color: var(--text-light); margin-top: 5px;">${Utils.formatDate(order.created_at)}</div>
                     </div>
-                    <span class="order-status ${order.status}">${this.getStatusText(order.status)}</span>
+                    <div style="text-align: left;">
+                        <div style="font-size: 13px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px;">الإجمالي</div>
+                        <strong style="font-size: 20px; color: var(--primary);">${Utils.formatPrice(order.total)}</strong>
+                    </div>
                 </div>
-                <div class="order-card-body">
-                    <div class="order-products">
+
+                ${order.status !== 'cancelled' ? `
+                <div style="margin-bottom: 35px; position: relative;">
+                    <div style="position: absolute; top: 14px; left: 10%; right: 10%; height: 4px; background: #eee; border-radius: 4px; z-index: 1;"></div>
+                    <div style="position: absolute; top: 14px; right: 10%; width: ${progress * 0.8}%; height: 4px; background: ${progress === 100 ? '#28a745' : 'var(--primary)'}; border-radius: 4px; z-index: 2; transition: width 0.5s ease-in-out;"></div>
+                    
+                    <div style="display:flex; justify-content: space-between; position: relative; z-index: 3;">
+                        ${steps.map((step, index) => {
+                            const isCompleted = activeStep >= (index + 1);
+                            const isCurrent = activeStep === (index + 1);
+                            const color = isCompleted ? (progress === 100 ? '#28a745' : 'var(--primary)') : '#eee';
+                            const textColor = isCurrent ? (progress === 100 ? '#28a745' : 'var(--primary)') : (isCompleted ? 'var(--text)' : 'var(--text-light)');
+                            const fontWeight = isCurrent ? 'bold' : 'normal';
+                            
+                            return `
+                            <div style="display: flex; flex-direction: column; align-items: center; width: 25%;">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: ${isCompleted ? color : '#fff'}; border: 2px solid ${color}; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-bottom: 8px; color: ${isCompleted ? '#fff' : 'var(--text-light)'}; transition: all 0.3s; box-shadow: ${isCurrent ? '0 0 0 4px rgba(26, 26, 46, 0.1)' : 'none'};">
+                                    ${isCompleted ? '✓' : ''}
+                                </div>
+                                <span style="font-size: 12px; color: ${textColor}; font-weight: ${fontWeight};">${step.label}</span>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+                ` : `
+                <div style="padding: 15px; background: #fff5f5; border: 1px solid #ffe3e3; border-radius: 8px; color: #dc3545; display: flex; align-items: center; gap: 10px; margin-bottom: 25px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
+                    <strong>تم إلغاء هذا الطلب</strong>
+                </div>
+                `}
+
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; padding: 15px; border-radius: 12px;">
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                         ${(order.items || []).slice(0, 4).map(item => `
-                            <div class="order-product-thumb">
-                                <img src="${item.image || '/placeholder.jpg'}" alt="${Utils.sanitizeHTML(item.name)}">
+                            <div style="position: relative;">
+                                <img src="${item.image || '/placeholder.jpg'}" style="width: 60px; height: 60px; border-radius: 10px; object-fit: cover; border: 1px solid #eaeaea; background: #fff;" title="${Utils.sanitizeHTML(item.name)}">
+                                ${item.quantity > 1 ? `<span style="position: absolute; top: -5px; right: -5px; background: var(--secondary); color: #fff; font-size: 11px; font-weight: bold; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff;">${item.quantity}</span>` : ''}
                             </div>
                         `).join('')}
                         ${(order.items || []).length > 4 ? `
-                            <div class="order-product-thumb more">
+                            <div style="width: 60px; height: 60px; border-radius: 10px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: bold; color: var(--text-light); border: 1px dashed #ccc;">
                                 +${order.items.length - 4}
                             </div>
                         ` : ''}
                     </div>
-                </div>
-                <div class="order-card-footer">
-                    <span class="order-total">${Utils.formatPrice(order.total)}</span>
-                    <button class="btn btn-outline btn-sm" onclick="AccountPage.viewOrderDetails('${order.id}')">
-                        عرض التفاصيل
+                    <button class="btn btn-primary" onclick="AccountPage.viewOrderDetails('${order.id}')" style="padding: 10px 20px; border-radius: 10px; white-space: nowrap;">
+                        تتبع التفاصيل
                     </button>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     },
+
     
     async viewOrderDetails(orderId) {
         const order = await DB.getOrderById(orderId);
