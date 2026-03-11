@@ -4849,3 +4849,138 @@ OrderSuccessPage.init = async function(orderId) {
         }
     }, 1000);
 };
+
+// =====================================================================
+// 🌟 تحويل صفحة المنتج لتصميم "أمازون" الاحترافي (Amazon Style) 🌟
+// =====================================================================
+
+window.addEventListener('DOMContentLoaded', () => {
+    // إعادة كتابة دالة عرض المنتج لتصبح بتصميم أمازون
+    ProductDetailPage.render = function() {
+        const container = document.getElementById('product-detail');
+        const breadcrumbName = document.getElementById('product-breadcrumb-name');
+        
+        if (!container || !this.product) return;
+        
+        if (breadcrumbName) {
+            breadcrumbName.textContent = this.product.name;
+        }
+        
+        const hasDiscount = this.product.sale_price && this.product.sale_price < this.product.price;
+        const discountPercentage = hasDiscount ? Utils.calculateDiscount(this.product.price, this.product.sale_price) : 0;
+        const isOutOfStock = this.product.stock <= 0;
+        const isLowStock = this.product.stock > 0 && this.product.stock <= 5;
+        const isInWishlist = Wishlist.isInWishlist(this.product.id);
+        
+        // استخراج اسم العلامة التجارية إن وجد، أو استخدام التصنيف
+        const brandName = this.product.brand || this.product.category?.name || 'ترياق الجمال';
+
+        container.innerHTML = `
+            <div style="display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start;">
+                
+                <div class="product-gallery" style="flex: 1 1 400px; min-width: 300px; position: sticky; top: 100px;">
+                    <div style="border: 1px solid #eee; border-radius: 8px; overflow: hidden; margin-bottom: 15px; background: #fff;">
+                        <img id="main-product-image" src="${this.product.images?.[0] || '/placeholder.jpg'}" alt="${Utils.sanitizeHTML(this.product.name)}" style="width: 100%; height: auto; object-fit: contain; max-height: 500px;">
+                    </div>
+                    ${this.product.images && this.product.images.length > 1 ? `
+                        <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;">
+                            ${this.product.images.map((img, index) => `
+                                <img src="${img}" class="product-thumbnail ${index === 0 ? 'active' : ''}" data-image="${img}" style="width: 60px; height: 60px; object-fit: cover; border: 2px solid ${index === 0 ? 'var(--secondary)' : '#eee'}; border-radius: 6px; cursor: pointer;">
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="product-info-amazon" style="flex: 2 1 400px; min-width: 300px;">
+                    <a href="#" style="color: #007185; font-size: 14px; text-decoration: none; margin-bottom: 5px; display: block;">العلامة التجارية: ${Utils.sanitizeHTML(brandName)}</a>
+                    <h1 style="font-size: 24px; color: #0f1111; margin-bottom: 10px; line-height: 1.3;">${Utils.sanitizeHTML(this.product.name)}</h1>
+                    
+                    <div style="display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
+                        <div class="stars" style="color: #ffa41c;">${HomePage.renderStars(this.product.rating || 5)}</div>
+                        <span style="color: #007185; font-size: 14px;">(${this.product.reviews_count || 0} تقييم)</span>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        ${hasDiscount ? `<div style="background: #cc0c39; color: #fff; display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-bottom: 5px;">خصم ${discountPercentage}%</div>` : ''}
+                        <div style="display: flex; align-items: baseline; gap: 10px;">
+                            <span style="font-size: 28px; font-weight: 500; color: #0f1111;">${Utils.formatPrice(this.product.sale_price || this.product.price)}</span>
+                            ${hasDiscount ? `<span style="font-size: 14px; color: #565959; text-decoration: line-through;">${Utils.formatPrice(this.product.price)}</span>` : ''}
+                        </div>
+                        <div style="font-size: 14px; color: #565959; margin-top: 5px;">الأسعار تشمل ضريبة القيمة المضافة.</div>
+                    </div>
+                    
+                    <div style="background: #f0f8ff; border: 1px solid #82d8d8; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 15px; color: #0f1111;">مواصفات وتفاصيل المنتج:</h4>
+                        <p style="font-size: 14px; line-height: 1.6; color: #0f1111; margin: 0;">${Utils.sanitizeHTML(this.product.description || 'لا توجد تفاصيل إضافية لهذا المنتج.')}</p>
+                    </div>
+
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 100px; text-align: center; padding: 10px; background: #fff; border: 1px solid #eee; border-radius: 8px;">
+                            <span style="font-size: 24px; display: block; margin-bottom: 5px;">🚚</span>
+                            <span style="font-size: 12px; color: #007185;">توصيل سريع</span>
+                        </div>
+                        <div style="flex: 1; min-width: 100px; text-align: center; padding: 10px; background: #fff; border: 1px solid #eee; border-radius: 8px;">
+                            <span style="font-size: 24px; display: block; margin-bottom: 5px;">💳</span>
+                            <span style="font-size: 12px; color: #007185;">دفع آمن</span>
+                        </div>
+                        <div style="flex: 1; min-width: 100px; text-align: center; padding: 10px; background: #fff; border: 1px solid #eee; border-radius: 8px;">
+                            <span style="font-size: 24px; display: block; margin-bottom: 5px;">↩️</span>
+                            <span style="font-size: 12px; color: #007185;">إرجاع مجاني</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="amazon-buy-box" style="flex: 1 1 280px; min-width: 250px; border: 1px solid #d5d9d9; border-radius: 8px; padding: 20px; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    <div style="font-size: 24px; font-weight: bold; color: #0f1111; margin-bottom: 10px;">${Utils.formatPrice(this.product.sale_price || this.product.price)}</div>
+                    
+                    <div style="font-size: 14px; color: #0f1111; margin-bottom: 15px;">
+                        توصيل مجاني <strong>غداً</strong>. اطلب خلال <span style="color: #007185;">5 ساعات</span>.
+                    </div>
+                    
+                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 15px; color: ${isOutOfStock ? '#cc0c39' : (isLowStock ? '#cc0c39' : '#007600')};">
+                        ${isOutOfStock ? 'نفذ المخزون' : (isLowStock ? `تبقى ${this.product.stock} فقط - اطلبه الآن.` : 'متوفر.')}
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-size: 13px; color: #0f1111; display: block; margin-bottom: 5px;">الكمية:</label>
+                        <div style="display: flex; align-items: center; border: 1px solid #d5d9d9; border-radius: 8px; overflow: hidden; width: max-content; background: #f0f2f2; box-shadow: 0 1px 2px rgba(15,17,17,.15);">
+                            <button id="detail-qty-minus" style="padding: 8px 12px; border: none; background: transparent; cursor: pointer; font-size: 16px;">-</button>
+                            <span id="detail-qty-value" style="padding: 8px 15px; background: #fff; font-weight: bold; min-width: 40px; text-align: center;">1</span>
+                            <button id="detail-qty-plus" style="padding: 8px 12px; border: none; background: transparent; cursor: pointer; font-size: 16px;">+</button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                        <button id="add-to-cart-detail" ${isOutOfStock ? 'disabled' : ''} style="background: #ffd814; border: 1px solid #fcd200; border-radius: 20px; padding: 12px; width: 100%; font-size: 15px; font-weight: bold; cursor: ${isOutOfStock ? 'not-allowed' : 'pointer'}; box-shadow: 0 1px 2px rgba(0,0,0,0.1); opacity: ${isOutOfStock ? '0.5' : '1'}; transition: 0.2s;">
+                            🛒 أضف إلى عربة التسوق
+                        </button>
+                        <button id="buy-now-detail" ${isOutOfStock ? 'disabled' : ''} style="background: #ffa41c; border: 1px solid #ff8f00; border-radius: 20px; padding: 12px; width: 100%; font-size: 15px; font-weight: bold; cursor: ${isOutOfStock ? 'not-allowed' : 'pointer'}; box-shadow: 0 1px 2px rgba(0,0,0,0.1); opacity: ${isOutOfStock ? '0.5' : '1'}; transition: 0.2s;">
+                            ⚡ اشترِ الآن
+                        </button>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #007185; margin-bottom: 15px; justify-content: center;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        <span>معاملاتك آمنة</span>
+                    </div>
+                    
+                    <button id="add-to-wishlist-detail" class="${isInWishlist ? 'active' : ''}" style="width: 100%; padding: 10px; background: #fff; border: 1px solid #d5d9d9; border-radius: 8px; font-size: 13px; color: #0f1111; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="${isInWishlist ? '#cc0c39' : 'none'}" stroke="${isInWishlist ? '#cc0c39' : 'currentColor'}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"></path></svg>
+                        <span>أضف إلى القائمة</span>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // إعادة تشغيل أزرار التفاعل (الكمية، الصور، الإضافة للسلة)
+        this.initGallery();
+        this.initQuantityControls();
+        this.initActions();
+        
+        // تشغيل زر "اشتر الآن" ليتوجه فوراً للدفع
+        document.getElementById('buy-now-detail')?.addEventListener('click', () => {
+            Cart.add(this.product, this.selectedQuantity);
+            Router.navigate('checkout');
+        });
+    };
+});
