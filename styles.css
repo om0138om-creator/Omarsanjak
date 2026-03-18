@@ -6680,3 +6680,25 @@ a:focus:not(:focus-visible) {
 .mobile-user-section {
     display: none !important;
 }
+/* =========================================
+   إخفاء صفحات الدخول والخطأ من التكدس في الأسفل
+   ========================================= */
+
+/* إخفاء قسم تسجيل الدخول وإنشاء حساب */
+#page-login,
+#page-register,
+.auth-page,
+.auth-section {
+    display: none !important;
+}
+
+/* إخفاء صفحة 404 من الظهور العشوائي */
+#page-404,
+.not-found-page,
+.not-found-section {
+    display: none !important;
+}
+/* إخفاء صفحة تأكيد الطلب من الظهور العشوائي في أسفل الموقع */
+#page-order-success:not(.active) {
+    display: none !important;
+}
