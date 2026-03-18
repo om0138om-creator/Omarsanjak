@@ -188,10 +188,33 @@ const AdminApp = {
         // Check authentication
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (session && session.user.email.toLowerCase() === ADMIN_CONFIG.ADMIN_EMAIL.toLowerCase()) {
-            AdminState.user = session.user;
-            this.showDashboard();
-            await this.loadDashboardData();
+        if (session) {
+            const userEmail = session.user.email.toLowerCase();
+            const isMainAdmin = userEmail === ADMIN_CONFIG.ADMIN_EMAIL.toLowerCase();
+            
+            // التحقق مما إذا كان الإيميل موجوداً في جدول المديرين
+            let isAdmin = false;
+            try {
+                const { data: adminData } = await supabase
+                    .from('admin_users')
+                    .select('email')
+                    .eq('email', userEmail)
+                    .single();
+                
+                if (adminData) isAdmin = true;
+            } catch (err) {
+                console.error('Error checking admin status:', err);
+            }
+
+            if (isMainAdmin || isAdmin) {
+                AdminState.user = session.user;
+                this.showDashboard();
+                await this.loadDashboardData();
+            } else {
+                // إذا كان مسجل دخول بحساب عادي وليس مدير
+                await supabase.auth.signOut();
+                this.showLoginPage();
+            }
         } else {
             this.showLoginPage();
         }
@@ -245,6 +268,7 @@ const AdminApp = {
             e.preventDefault();
             this.handleProductSubmit();
         });
+
         
         // Category form
         document.getElementById('add-category-btn')?.addEventListener('click', () => {
@@ -288,12 +312,21 @@ const AdminApp = {
             this.saveTaxSettings();
         });
         
+        
+        
+        // نموذج إضافة مالك جديد
+        document.getElementById('add-admin-form')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleAddAdmin();
+        });
+
         // Ticket reply
         document.getElementById('ticket-reply-form')?.addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleTicketReply();
         });
     },
+
     
     initTheme() {
         const savedTheme = localStorage.getItem('admin_theme') || 'light';
@@ -337,9 +370,20 @@ const AdminApp = {
             
             if (error) throw error;
             
-            if (data.user.email.toLowerCase() !== ADMIN_CONFIG.ADMIN_EMAIL.toLowerCase()) {
+            // 1. التحقق مما إذا كان الإيميل موجوداً في جدول المديرين الذي أنشأناه
+            const { data: adminData, error: adminError } = await supabase
+                .from('admin_users')
+                .select('email')
+                .eq('email', data.user.email.toLowerCase())
+                .single();
+            
+            // 2. السماح للإيميل الأساسي المبرمج مسبقاً دائماً بالدخول (كإجراء أمان لك)
+            const isMainAdmin = data.user.email.toLowerCase() === ADMIN_CONFIG.ADMIN_EMAIL.toLowerCase();
+            
+            // 3. إذا لم يكن إيميله الأساسي، ولم يكن موجوداً في جدول المديرين، نمنعه من الدخول
+            if (!adminData && !isMainAdmin) {
                 await supabase.auth.signOut();
-                throw new Error('ليس لديك صلاحية الوصول لهذه الصفحة');
+                throw new Error('ليس لديك صلاحية الوصول للوحة التحكم');
             }
             
             AdminState.user = data.user;
@@ -354,6 +398,7 @@ const AdminApp = {
         submitBtn.disabled = false;
         submitBtn.textContent = 'تسجيل الدخول';
     },
+
     
     async handleLogout() {
         await supabase.auth.signOut();
@@ -1578,10 +1623,15 @@ const { data } = await supabase.from('categories').select('*').eq('is_active', t
                 document.getElementById('tax-rate').value = data.tax_rate || 0;
                 document.getElementById('chargily-key').value = data.chargily_key || '';
             }
+            
+            // هذا هو السطر الجديد الذي قمنا بإضافته لكي تظهر قائمة الملاك
+            await this.loadAdmins();
+            
         } catch (error) {
             console.error('Settings error:', error);
         }
     },
+
     
     async saveSiteSettings() {
         try {
@@ -1617,6 +1667,85 @@ const { data } = await supabase.from('categories').select('*').eq('is_active', t
             AdminToast.error('حدث خطأ');
         }
     },
+    
+    // ============ ADMIN USERS MANAGEMENT ============
+    async loadAdmins() {
+        const container = document.getElementById('admins-table-body');
+        if (!container) return;
+        
+        try {
+            const { data, error } = await supabase.from('admin_users').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+            
+            if (data.length === 0) {
+                container.innerHTML = '<tr><td colspan="3" class="text-center">لا يوجد مديرين آخرين</td></tr>';
+                return;
+            }
+            
+            container.innerHTML = data.map(admin => `
+                <tr>
+                    <td><strong>${admin.email}</strong></td>
+                    <td>${AdminUtils.formatDateShort(admin.created_at || new Date())}</td>
+                    <td>
+                        <button class="table-action-btn delete" onclick="AdminApp.deleteAdmin('${admin.id}', '${admin.email}')" title="حذف المدير">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                            </svg>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Error loading admins:', error);
+        }
+    },
+
+    async handleAddAdmin() {
+        const emailInput = document.getElementById('new-admin-email');
+        const email = emailInput.value.trim().toLowerCase();
+        
+        if (!email) {
+            AdminToast.warning('يرجى إدخال البريد الإلكتروني');
+            return;
+        }
+
+        try {
+            // إضافة الإيميل لجدول المديرين
+            const { error } = await supabase.from('admin_users').insert([{ email: email }]);
+            if (error) {
+                if(error.code === '23505') throw new Error('هذا البريد موجود كمدير بالفعل');
+                throw error;
+            }
+            
+            AdminToast.success('تمت إضافة المالك/المدير بنجاح');
+            emailInput.value = ''; // تفريغ الحقل
+            await this.loadAdmins(); // تحديث الجدول
+            
+        } catch (error) {
+            AdminToast.error(error.message || 'حدث خطأ أثناء الإضافة');
+        }
+    },
+
+    async deleteAdmin(adminId, email) {
+        if(email.toLowerCase() === ADMIN_CONFIG.ADMIN_EMAIL.toLowerCase()) {
+            AdminToast.error('لا يمكن حذف حساب المالك الأساسي!');
+            return;
+        }
+
+        this.showConfirmModal(`هل أنت متأكد من إزالة الصلاحية عن [${email}]؟`, async () => {
+            try {
+                const { error } = await supabase.from('admin_users').delete().eq('id', adminId);
+                if (error) throw error;
+                
+                AdminToast.success('تم حذف المدير بنجاح');
+                await this.loadAdmins();
+            } catch (error) {
+                AdminToast.error('حدث خطأ أثناء الحذف');
+            }
+        });
+    },
+    
     
     // ============ CONFIRM MODAL ============
     showConfirmModal(message, callback) {
