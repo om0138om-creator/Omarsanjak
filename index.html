@@ -22,7 +22,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <!-- Styles -->
-    <link rel="stylesheet" href="styles.css?v=2">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- ======================== LOADER ======================== -->
@@ -417,29 +417,9 @@
                 </div>
             </section>
 
-            <!-- Categories Section -->
-            <section class="section categories-section">
-                <div class="container">
-                    <div class="section-header">
-                        <h2 class="section-title">تصفح التصنيفات</h2>
-                        <a href="#" class="section-link" data-page="categories">
-                            عرض الكل
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="19" y1="12" x2="5" y2="12"/>
-                                <polyline points="12 19 5 12 12 5"/>
-                            </svg>
-                        </a>
-                    </div>
-                    <div class="categories-grid" id="home-categories">
-                        <!-- Dynamic categories -->
-                        <div class="category-skeleton"></div>
-                        <div class="category-skeleton"></div>
-                        <div class="category-skeleton"></div>
-                        <div class="category-skeleton"></div>
-                    </div>
-                </div>
-            </section>
 
+
+            <!-- New Products Section -->
             <section class="section products-section">
                 <div class="container">
                     <div class="section-header">
@@ -453,6 +433,7 @@
                         </a>
                     </div>
                     <div class="products-grid" id="new-products">
+                        <!-- Dynamic products -->
                         <div class="product-skeleton"></div>
                         <div class="product-skeleton"></div>
                         <div class="product-skeleton"></div>
@@ -461,7 +442,40 @@
                 </div>
             </section>
 
+            <!-- Banner Section -->
+            <section class="banner-section">
+                <div class="container">
+                    <div class="banner-grid">
+                        <div class="banner-card banner-large">
+                            <div class="banner-content">
+                                <span class="banner-badge">حصري</span>
+                                <h3>خصومات تصل إلى 50%</h3>
+                                <p>على مجموعة مختارة من المنتجات</p>
+                                <button class="btn btn-primary" data-page="products" data-filter="sale">تسوق الآن</button>
+                            </div>
+                            <div class="banner-bg"></div>
+                        </div>
+                        <div class="banner-card banner-small">
+                            <div class="banner-content">
+                                <h3>شحن مجاني</h3>
+                                <p>للطلبات أكثر من 5000 دج</p>
+                                <button class="btn btn-outline" data-page="products">اكتشف المزيد</button>
+                            </div>
+                            <div class="banner-bg"></div>
+                        </div>
+                        <div class="banner-card banner-small">
+                            <div class="banner-content">
+                                <h3>منتجات جديدة</h3>
+                                <p>وصلت حديثاً للمتجر</p>
+                                <button class="btn btn-outline" data-page="products" data-filter="new">اكتشف الآن</button>
+                            </div>
+                            <div class="banner-bg"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
+            <!-- Featured Products Section -->
             <section class="section products-section">
                 <div class="container">
                     <div class="section-header">
@@ -475,6 +489,7 @@
                         </a>
                     </div>
                     <div class="products-grid" id="featured-products">
+                        <!-- Dynamic products -->
                         <div class="product-skeleton"></div>
                         <div class="product-skeleton"></div>
                         <div class="product-skeleton"></div>
@@ -482,8 +497,52 @@
                     </div>
                 </div>
             </section>
-        </section>
 
+            <!-- Reviews Section -->
+            <section class="section reviews-section">
+                <div class="container">
+                    <div class="section-header">
+                        <h2 class="section-title">آراء العملاء</h2>
+                        <p class="section-subtitle">تقييمات حقيقية من عملائنا</p>
+                    </div>
+                    <div class="reviews-grid" id="customer-reviews">
+                        <!-- Dynamic reviews from verified purchases -->
+                        <div class="no-reviews-message" id="no-reviews-message">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+                            </svg>
+                            <h4>لا توجد تقييمات بعد</h4>
+                            <p>كن أول من يشتري ويقيّم منتجاتنا</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Newsletter Section -->
+            <section class="newsletter-section">
+                <div class="container">
+                    <div class="newsletter-content">
+                        <div class="newsletter-text">
+                            <h3>اشترك في نشرتنا البريدية</h3>
+                            <p>احصل على آخر العروض والمنتجات الجديدة مباشرة في بريدك</p>
+                        </div>
+                        <form class="newsletter-form" id="newsletter-form">
+                            <div class="newsletter-input-wrapper">
+                                <input type="email" placeholder="أدخل بريدك الإلكتروني" required>
+                                <button type="submit" class="btn btn-primary">
+                                    <span>اشتراك</span>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="22" y1="2" x2="11" y2="13"/>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+        </section>
 
         <!-- ============== PRODUCTS PAGE ============== -->
         <section class="page page-products" id="page-products">
@@ -1771,10 +1830,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <script src="app.js?v=2"></script>
-    
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
-    
+    <script src="app.js"></script>
 </body>
 </html>
