@@ -3756,10 +3756,21 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 992px) {
     .product-detail {
         grid-template-columns: 1fr;
+        gap: var(--spacing-md);
     }
     
     .product-gallery {
-        position: static;
+        position: relative !important;
+        top: auto !important;
+        z-index: 1;
+    }
+
+    .product-main-image {
+        max-height: 350px; /* لكي لا تأخذ الصورة شاشة الهاتف بالكامل */
+    }
+
+    .product-main-image img {
+        object-fit: contain; /* لضمان ظهور المنتج بالكامل بدون قص */
     }
     
     .reviews-summary {
@@ -6645,116 +6656,3 @@ a:focus:not(:focus-visible) {
     .d-xl-none { display: none; }
     .d-xl-block { display: block; }
 }      
-
-#page-loader {
-    display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    z-index: -9999 !important;
-}
-
-/* ======================================================
-   1. إصلاح تداخل الصفحات (إخفاء كل الصفحات وإظهار النشطة فقط)
-   ====================================================== */
-.page {
-    display: none !important;
-}
-.page.active {
-    display: block !important;
-}
-
-/* ======================================================
-   2. إصلاح مشكلة الصور العملاقة في تفاصيل المنتج
-   ====================================================== */
-.product-main-image img,
-.quick-view-image img {
-    max-width: 100% !important;
-    max-height: 450px !important; /* يمنع الصورة من أن تكون أطول من الشاشة */
-    object-fit: contain !important; /* يحافظ على دقة الصورة بدون تمطيط */
-    border-radius: 8px;
-    margin: 0 auto;
-    display: block;
-}
-
-/* إصلاح مشكلة الصور العملاقة في صفحة المنتج والعرض السريع */
-.product-main-image img,
-.quick-view-image img {
-    max-width: 100% !important;
-    max-height: 400px !important;
-    object-fit: contain !important;
-    margin: 0 auto;
-    display: block;
-    border-radius: 8px;
-}
-
-
-/* ======================================================
-   1. إصلاح ظهور صفحة تسجيل الدخول (إبعادها عن الهيدر)
-   ====================================================== */
-.page#page-auth.active {
-    display: flex !important;
-    align-items: flex-start;
-    justify-content: center;
-    padding-top: 150px !important; /* لدفع الصفحة للأسفل لكي لا تختبئ خلف الهيدر */
-    padding-bottom: 80px !important;
-    min-height: 80vh;
-}
-
-/* ======================================================
-   2. جعل صور المنتجات بجانب بعضها وإلغاء الصورة الطولية
-   ====================================================== */
-.custom-side-by-side {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    gap: 15px !important;
-    justify-content: center;
-    align-items: flex-start;
-    margin-bottom: 25px;
-}
-
-.custom-side-by-side .side-image {
-    width: calc(50% - 15px) !important; /* صورتين بجانب بعض في الهاتف */
-    max-width: 250px !important;
-    height: auto !important;
-    object-fit: contain !important;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    border: 1px solid #eee;
-}
-
-/* للشاشات الكبيرة: 3 صور بجانب بعض */
-@media (min-width: 768px) {
-    .custom-side-by-side .side-image {
-        width: calc(33.333% - 15px) !important;
-    }
-}
-
-
-/* ======================================================
-   إصلاح نهائي وحاسم لظهور صفحة تسجيل الدخول
-   ====================================================== */
-.page#page-auth.active {
-    display: block !important; 
-}
-
-.page-auth .auth-container {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: flex-start !important;
-    padding-top: 150px !important; 
-    padding-bottom: 80px !important;
-    width: 100% !important;
-    min-height: 100vh !important;
-}
-
-.page-auth .auth-card {
-    width: 92% !important;
-    max-width: 450px !important;
-    display: block !important;
-    background: #fff !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
-    border-radius: 16px !important;
-    padding: 30px !important;
-    margin: 0 auto !important;
-}
