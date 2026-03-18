@@ -6702,3 +6702,25 @@ a:focus:not(:focus-visible) {
 #page-order-success:not(.active) {
     display: none !important;
 }
+/* =========================================
+   إخفاء الأقسام المزعجة من الموقع نهائياً
+   ========================================= */
+
+/* 1. إخفاء البنرات، التقييمات، والنشرة البريدية */
+.banner-section,
+.reviews-section,
+.newsletter-section {
+    display: none !important;
+}
+
+/* 2. إخفاء صفحات تسجيل الدخول والخطأ 404 تماماً */
+#page-auth,
+#page-404 {
+    display: none !important;
+}
+
+/* 3. إخفاء صفحة تأكيد الطلب من الظهور العشوائي في الأسفل
+   (ستظهر فقط في اللحظة التي يشتري فيها العميل لتأكيد نجاح عمليته) */
+#page-order-success:not(.active) {
+    display: none !important;
+}
