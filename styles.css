@@ -6656,3 +6656,27 @@ a:focus:not(:focus-visible) {
     .d-xl-none { display: none; }
     .d-xl-block { display: block; }
 }      
+/* =========================================
+   إخفاء الأقسام غير المرغوبة (عمر السيد)
+   ========================================= */
+
+/* 1. إخفاء البنرات (الخصومات والشحن المجاني) */
+.banner-section {
+    display: none !important;
+}
+
+/* 2. إخفاء قسم آراء العملاء بالكامل */
+.reviews-section {
+    display: none !important;
+}
+
+/* 3. إخفاء قسم النشرة البريدية */
+.newsletter-section {
+    display: none !important;
+}
+
+/* 4. إخفاء أيقونة المستخدم (لمنع الدخول لصفحة تسجيل الدخول) */
+#user-dropdown,
+.mobile-user-section {
+    display: none !important;
+}
