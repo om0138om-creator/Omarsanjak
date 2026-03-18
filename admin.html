@@ -1775,7 +1775,33 @@
                             </div>
                         </div>
                     </div>
-                </section>
+
+                    <div class="admin-card" style="margin-top: var(--spacing-xl);">
+                        <div class="admin-card-header">
+                            <h3 class="admin-card-title">إدارة المشرفين والمديرين</h3>
+                        </div>
+                        <div class="admin-card-body">
+                            <form id="add-admin-form" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                                <input type="email" id="new-admin-email" class="form-control" placeholder="أدخل بريد المدير الجديد (مثال: admin@gmail.com)" required style="flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                                <button type="submit" class="btn btn-primary">إضافة مالك</button>
+                            </form>
+
+                            <div class="admin-table-wrapper">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>البريد الإلكتروني</th>
+                                            <th>تاريخ الإضافة</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admins-table-body">
+                                        </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    </section>
             </div>
         </main>
     </div>
